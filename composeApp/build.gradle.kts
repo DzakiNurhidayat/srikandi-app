@@ -70,7 +70,6 @@ dependencies {
     implementation(compose.uiTooling)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose.v120)
-    implementation(libs.retrofit)
     "kapt"(libs.hilt.compiler)
 }
 
