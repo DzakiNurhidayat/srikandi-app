@@ -5,7 +5,6 @@
             </encoder>
         </appender>
 
-        <!-- Set your database logger to DEBUG to see all messages -->
         <logger name="org.example.project.database" level="DEBUG" additivity="false">
             <appender-ref ref="CONSOLE"/>
         </logger>

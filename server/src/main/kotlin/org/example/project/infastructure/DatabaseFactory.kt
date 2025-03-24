@@ -1,9 +1,9 @@
-package org.example.project.data.database
+package org.example.project.infastructure
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.example.project.common.DatabaseConfig
-import org.example.project.data.entity.ProductTable
+import org.example.project.domain.entities.Products
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -29,7 +29,7 @@ object DatabaseFactory {
             Database.connect(dataSource)
             logger.info("Connected to database")
             transaction {
-                SchemaUtils.create(ProductTable)
+                SchemaUtils.create(Products)
                 logger.info("Tables created successfully.")
             }
         } catch (e: Exception) {

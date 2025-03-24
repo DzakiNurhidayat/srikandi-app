@@ -9,11 +9,12 @@ version = "1.0.0"
 
 application {
     mainClass.set("org.example.project.ApplicationKt")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "true"}")
 }
 
 tasks.withType<Jar> {
     from(sourceSets.main.get().resources)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 repositories {

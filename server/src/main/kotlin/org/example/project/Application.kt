@@ -4,11 +4,10 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import org.example.project.common.ServerConfig
-import org.example.project.data.database.DatabaseFactory
-import org.example.project.plugins.configureDI
-import org.example.project.plugins.configureRouting
-import org.example.project.plugins.configureSerialization
-
+import org.example.project.infastructure.DatabaseFactory
+import org.example.project.di.configureDI
+import org.example.project.application.plugins.configureRouting
+import org.example.project.application.plugins.configureSerialization
 
 fun main() {
     embeddedServer(

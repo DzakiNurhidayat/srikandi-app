@@ -1,41 +1,49 @@
-package org.example.project.routes
+package org.example.project.application.routes
 
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.example.project.application.dtos.ProductResponse
+import org.example.project.application.dtos.toData
+import org.example.project.domain.services.inmemory.ProductService
 import org.example.project.model.Product
-import org.example.project.services.ProductService
 import org.koin.ktor.ext.inject
+import org.slf4j.LoggerFactory
 
 fun Application.productRoute() {
     val productService: ProductService by inject()
     routing {
         route("/api/products") {
             post {
-                val product = call.receive<Product>()
-                val createdProduct = productService.createProduct(product)
-                if (createdProduct != null) {
-                    call.respond(HttpStatusCode.Created, createdProduct)
-                } else {
-                    call.respond(HttpStatusCode.BadRequest, "Failed to create product")
+                try {
+                    val product = call.receive<Product>()
+                    val createdProduct = productService.create(product)
+                    val data = createdProduct.toData()
+                    call.respond(HttpStatusCode.Created, ProductResponse("Success", "Product created successfully", data))
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid request: ${e.localizedMessage}")
                 }
             }
             get {
-                val products = productService.getAllProducts()
+                val products = productService.getAll()
+                if (products.isEmpty()) {
+                    call.respond(HttpStatusCode.NoContent)
+                }
                 call.respond(products)
             }
+
             get("/{id}") {
                 val idString = call.parameters["id"]
                 if (idString == null) {
                     call.respond(HttpStatusCode.BadRequest, "Missing ID parameter")
                     return@get
                 }
-                
+
                 try {
                     val id = idString.toInt()
-                    val product = productService.getProductById(id)
+                    val product = productService.getById(id)
                     if (product == null) {
                         call.respond(HttpStatusCode.NotFound, "Product not found")
                     } else {
@@ -43,42 +51,37 @@ fun Application.productRoute() {
                     }
                 } catch (e: NumberFormatException) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid ID format: must be an integer")
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid request: ${e.localizedMessage}")
                 }
             }
 
-            put("{id}") {
+            put("/{id}") {
                 val idString = call.parameters["id"]
                 if (idString == null) {
                     call.respond(HttpStatusCode.BadRequest, "Missing ID parameter")
                     return@put
                 }
-
                 try {
                     val id = idString.toInt()
-                    val product = productService.getProductById(id)
-                    if (product == null) {
-                        call.respond(HttpStatusCode.NotFound, "Product not found")
-                        return@put
-                    }
-
-                    val updatedProduct = call.receive<Product>()
-                    val newProduct = product.copy(
-                        name = updatedProduct.name,
-                        description = updatedProduct.description,
-                        price = updatedProduct.price,
-                        imageUrl = updatedProduct.imageUrl
-                    )
-                    val result = productService.updateProduct(newProduct)
-                    if (result != null) {
-                        call.respond(HttpStatusCode.OK, result)
+                    val logger = LoggerFactory.getLogger("ProductRoute")
+                    val updateProduct = call.receive<Product>()
+                    updateProduct.id = id
+                    logger.info(updateProduct.toString())
+                    val updated = productService.updateProduct(updateProduct)
+                    if (updated) {
+                        call.respond(HttpStatusCode.OK, "Product updated successfully")
                     } else {
-                        call.respond(HttpStatusCode.BadRequest, "Failed to update product")
+                        call.respond(HttpStatusCode.NotFound, "Product not found")
                     }
                 } catch (e: NumberFormatException) {
                     call.respond(HttpStatusCode.BadRequest, "Invalid ID format: must be an integer")
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, "Invalid request: ${e.localizedMessage}")
                 }
             }
-            delete("{id}") {
+
+            delete("/{id}") {
                 val idString = call.parameters["id"]
                 if (idString == null) {
                     call.respond(HttpStatusCode.BadRequest, "Missing ID parameter")
@@ -87,13 +90,13 @@ fun Application.productRoute() {
 
                 try {
                     val id = idString.toInt()
-                    val product = productService.getProductById(id)
+                    val product = productService.getById(id)
                     if (product == null) {
                         call.respond(HttpStatusCode.NotFound, "Product not found")
                         return@delete
                     }
 
-                    val result = productService.deleteProduct(id)
+                    val result = productService.delete(id)
                     if (result) {
                         call.respond(HttpStatusCode.OK, "Product deleted successfully")
                     } else {
