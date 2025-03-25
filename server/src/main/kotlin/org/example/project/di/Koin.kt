@@ -2,7 +2,6 @@ package org.example.project.di
 
 import io.ktor.server.application.*
 import org.example.project.domain.services.inmemory.ProductService
-import org.example.project.domain.services.interfaces.IProductService
 import org.example.project.infastructure.repositories.inmemory.ProductRepository
 import org.example.project.infastructure.repositories.interfaces.IProductRepository
 import org.koin.dsl.module

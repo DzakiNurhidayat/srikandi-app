@@ -1,9 +1,9 @@
 package org.example.project.domain.services.interfaces
 
-interface IEntityService<T, ID> {
+interface IEntityService<R, ID, T> {
     suspend fun getAll(): List<T>
     suspend fun getById(id: ID): T?
-    suspend fun create(entity: T): T
-    suspend fun update(id: ID, entity: T): Boolean
+    suspend fun create(request: R): T?
+    suspend fun update(id: ID, request: R): T
     suspend fun delete(id: ID): Boolean
 }

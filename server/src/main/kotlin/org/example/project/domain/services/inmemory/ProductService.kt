@@ -1,21 +1,35 @@
 package org.example.project.domain.services.inmemory
 
+import org.example.project.application.dtos.requests.ProductRequest
+import org.example.project.application.dtos.toEntity
 import org.example.project.domain.services.interfaces.IProductService
 import org.example.project.infastructure.repositories.interfaces.IProductRepository
 import org.example.project.model.Product
-import org.slf4j.LoggerFactory
 
-class ProductService(private val productRepository: IProductRepository) : BaseService<Product, Int>(productRepository),
-    IProductService {
+class ProductService(
+    productRepository: IProductRepository
+) : BaseService<ProductRequest, Int, Product>(productRepository), IProductService {
 
-    override suspend fun updateProduct(product: Product): Boolean {
-        val existingProduct = productRepository.getById(product.id!!) ?: return false
+    override suspend fun create(request: ProductRequest): Product {
+        val newProduct = request.toEntity() ?: throw IllegalArgumentException("Invalid product request")
+        return repository.create(newProduct)
+    }
+
+    override suspend fun update(id: Int, request: ProductRequest): Product {
+        val existingProduct = repository.getById(id) ?: throw NoSuchElementException("Product with ID $id not found")
+
         val updatedProduct = existingProduct.copy(
-            name = product.name,
-            description = product.description,
-            price = product.price,
-            imageUrl = product.imageUrl ?: existingProduct.imageUrl
+            name = request.name ?: existingProduct.name,
+            description = request.description ?: existingProduct.description,
+            price = request.price ?: existingProduct.price,
+            imageUrl = request.imageUrl ?: existingProduct.imageUrl
         )
-        return productRepository.update(updatedProduct.id!!, updatedProduct)
+
+        return repository.update(id, updatedProduct)
+    }
+
+    override suspend fun delete(id: Int): Boolean {
+        val existingProduct = repository.getById(id) ?: throw NoSuchElementException("Product with ID $id not found")
+        return repository.delete(id)
     }
 }
