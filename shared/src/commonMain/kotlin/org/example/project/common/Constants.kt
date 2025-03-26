@@ -13,6 +13,6 @@ object ServerConfig {
 object DatabaseConfig {
     const val DATABASE_URL = "jdbc:postgresql://localhost:5432/srikandi"
     const val DATABASE_DRIVER = "org.postgresql.Driver"
-    const val DATABASE_USER = "rebar"
-    const val DATABASE_PASSWORD = ""
+    val DATABASE_USER = System.getenv("DATABASE_USER") ?: "rebar"
+    val DATABASE_PASSWORD = System.getenv("DATABASE_PASSWORD") ?:  ""
 }
