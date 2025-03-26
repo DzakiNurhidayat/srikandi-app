@@ -6,7 +6,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.example.project.application.dtos.requests.ProductRequest
-import org.example.project.application.dtos.responses.BaseResponse
+import org.example.project.application.dtos.BaseResponse
+import org.example.project.application.dtos.errorResponse
+import org.example.project.application.dtos.successResponse
 import org.example.project.domain.services.inmemory.ProductService
 import org.koin.ktor.ext.inject
 
@@ -16,87 +18,34 @@ fun Application.productRoute() {
     routing {
         route("/api/products") {
             post {
-                try {
-                    val productRequest = call.receive<ProductRequest>()
-                    val response = productService.create(productRequest)
-                    call.respond(HttpStatusCode.Created, BaseResponse(true, "Product created", response))
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        BaseResponse(false, "Failed to create product", null)
-                    )
-                }
+                val productRequest = call.receive<ProductRequest>()
+                val response = productService.create(productRequest)
+                call.respond(HttpStatusCode.Created, successResponse(response, "Produk berhasil dibuat"))
             }
-
             get {
-                try {
-                    val products = productService.getAll()
-                    call.respond(HttpStatusCode.OK, BaseResponse(true, "Get all products", products))
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        BaseResponse(false, "Failed to get products", null)
-                    )
+                val response = productService.getAll()
+                if (response.isNotEmpty()) {
+                    call.respond(HttpStatusCode.OK, successResponse(response, "Berhasil mengambil semua produk"))
+                } else {
+                    call.respond(HttpStatusCode.OK, successResponse(null, "Tidak ada produk yang ditemukan"))
                 }
             }
             get("/{id}") {
-                try {
-                    println("tes")
-                    val id = call.parameters["id"]?.toInt() ?: throw IllegalArgumentException("Invalid ID format")
-                    println(id)
-                    val response = productService.getById(id) ?: throw NoSuchElementException("Product not found")
-                    call.respond(HttpStatusCode.Found, BaseResponse(true, "Get a product", response))
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.InternalServerError, BaseResponse(false, "Failed to get product", null))
-                }
+                val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
+                val product = productService.getById(id)
+                call.respond(HttpStatusCode.OK, successResponse(product, "Berhasil mengambil produk dengan ID $id"))
             }
-
             put("/{id}") {
-                try {
-                    val id = call.parameters["id"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("Invalid ID format")
-                    val productRequest = call.receive<ProductRequest>()
-                    val response = productService.update(id, productRequest)
-                    call.respond(HttpStatusCode.OK, BaseResponse(true, "Product updated successfully", response))
-                } catch (e: IllegalArgumentException) {
-                    call.respond(HttpStatusCode.BadRequest, BaseResponse(false, e.message ?: "Invalid request", null))
-                } catch (e: NoSuchElementException) {
-                    call.respond(HttpStatusCode.NotFound, BaseResponse(false, e.message ?: "Invalid request", null))
-                } catch (e: ContentTransformationException) {
-                    call.respond(HttpStatusCode.BadRequest, BaseResponse(false, "Invalid request body format", null))
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        BaseResponse(false, "Failed to update product", null)
-                    )
-                }
+                val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
+                val productRequest = call.receive<ProductRequest>()
+                val response = productService.update(id, productRequest)
+                call.respond(HttpStatusCode.OK, successResponse(response, "Produk berhasil diupdate"))
             }
-
 
             delete("/{id}") {
-                try {
-                    val id = call.parameters["id"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("Invalid ID format")
-
-                    val isDeleted = productService.delete(id)
-
-                    if (isDeleted) {
-                        call.respond(HttpStatusCode.OK, BaseResponse(true, "Product deleted successfully", null))
-                    } else {
-                        call.respond(
-                            HttpStatusCode.NotFound,
-                            BaseResponse(false, "Product with ID $id not found", null)
-                        )
-                    }
-
-                } catch (e: NoSuchElementException) {
-                    call.respond(HttpStatusCode.BadRequest, BaseResponse(false, e.message ?: "Invalid request", null))
-                } catch (e: Exception) {
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        BaseResponse(false, "Failed to delete product", null)
-                    )
-                }
+                val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
+                productService.delete(id)
+                call.respond(HttpStatusCode.OK, successResponse(null, "Berhasil menghapus produk dengan ID $id"))
             }
         }
     }
