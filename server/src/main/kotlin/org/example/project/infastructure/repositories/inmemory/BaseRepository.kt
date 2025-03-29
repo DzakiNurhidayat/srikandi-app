@@ -1,8 +1,6 @@
 package org.example.project.infastructure.repositories.inmemory
 
-import io.ktor.server.plugins.*
 import org.example.project.infastructure.repositories.interfaces.IEntityRepository
-import org.jetbrains.exposed.dao.exceptions.EntityNotFoundException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -20,20 +18,15 @@ abstract class BaseRepository<T : Table, E, ID>(
     }
 
     override suspend fun getById(id: ID): E? = dbQuery {
-        table.selectAll().where(idColumn eq id).map { rowToEntity(it) }.singleOrNull()
+        table.selectAll().where { idColumn eq id }.map { rowToEntity(it) }.singleOrNull()
     }
 
-    override suspend fun delete(id: ID): Boolean = try {
-        val deletedRows = dbQuery {
-            table.deleteWhere { idColumn eq id }
-        }
-        if (deletedRows > 0) {
-            true
-        } else {
-            throw NoSuchElementException("Data dengan ID $id tidak ditemukan")
-        }
-    } catch (e: Exception) {
-        throw RuntimeException("Gagal menghapus data dengan ID $id: ${e.message}")
+    override suspend fun findById(id: ID): Boolean = dbQuery {
+        table.select(listOf(idColumn)).where { idColumn eq id }.count() > 0
+    }
+
+    override suspend fun delete(id: ID): Boolean = dbQuery {
+        table.deleteWhere { idColumn eq id } > 0
     }
 
     protected abstract fun rowToEntity(row: ResultRow): E
@@ -43,5 +36,3 @@ abstract class BaseRepository<T : Table, E, ID>(
         return LocalDateTime.now().format(formatter)
     }
 }
-
-

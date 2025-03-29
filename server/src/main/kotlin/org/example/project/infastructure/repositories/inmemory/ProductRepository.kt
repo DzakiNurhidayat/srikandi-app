@@ -21,21 +21,23 @@ class ProductRepository : BaseRepository<Products, Product, Int>(Products, Produ
                 it[updatedAt] = getCurrentTimestamp()
             }[Products.id]
         }
-        return getById(id) ?: throw IllegalStateException("Failed to retrieve newly created product with ID: $id")
+        return getById(id) ?: throw IllegalStateException("Gagal mengambil produk yang baru dibuat dengan id: $id")
     }
 
-    override suspend fun update(id: Int, entity: Product): Product = dbQuery {
-        Products.update({ Products.id eq id }) {
-            it[name] = entity.name
-            it[description] = entity.description
-            it[price] = entity.price
-            it[imageUrl] = entity.imageUrl
-            it[updatedAt] = getCurrentTimestamp()
+    override suspend fun update(id: Int, entity: Product): Product {
+        dbQuery {
+            Products.update({ Products.id eq id }) {
+                it[name] = entity.name
+                it[description] = entity.description
+                it[price] = entity.price
+                it[imageUrl] = entity.imageUrl
+                it[updatedAt] = getCurrentTimestamp()
+            }
         }
-        entity.copy(id = id)
+        return getById(id) ?: throw IllegalStateException("Gagal mengambil produk yang baru dibuat dengan id: $id")
     }
 
-    override suspend fun findByName(name: String): Product? = dbQuery {
+    override suspend fun getByName(name: String): Product? = dbQuery {
         Products.selectAll().where { Products.name eq name }
             .mapNotNull { rowToEntity(it) }
             .singleOrNull()

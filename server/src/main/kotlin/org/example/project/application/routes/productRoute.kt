@@ -6,8 +6,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.example.project.application.dtos.requests.ProductRequest
-import org.example.project.application.dtos.BaseResponse
-import org.example.project.application.dtos.errorResponse
 import org.example.project.application.dtos.successResponse
 import org.example.project.domain.services.inmemory.ProductService
 import org.koin.ktor.ext.inject
@@ -24,11 +22,7 @@ fun Application.productRoute() {
             }
             get {
                 val response = productService.getAll()
-                if (response.isNotEmpty()) {
-                    call.respond(HttpStatusCode.OK, successResponse(response, "Berhasil mengambil semua produk"))
-                } else {
-                    call.respond(HttpStatusCode.OK, successResponse(null, "Tidak ada produk yang ditemukan"))
-                }
+                call.respond(HttpStatusCode.OK, successResponse(response, "Berhasil mengambil semua produk"))
             }
             get("/{id}") {
                 val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")

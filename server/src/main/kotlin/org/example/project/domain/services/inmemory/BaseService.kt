@@ -16,7 +16,14 @@ abstract class BaseService<R, ID, T>(
         return repository.getById(id) ?: throw NotFoundException("Data dengan ID $id tidak ditemukan")
     }
 
+    override suspend fun findById(id: ID): Boolean {
+        return repository.findById(id)
+    }
+
     override suspend fun delete(id: ID): Boolean {
+        if (!repository.findById(id)) {
+            throw NotFoundException("Data dengan ID $id tidak ditemukan")
+        }
         return repository.delete(id)
     }
 }

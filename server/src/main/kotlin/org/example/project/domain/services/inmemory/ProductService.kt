@@ -1,5 +1,6 @@
 package org.example.project.domain.services.inmemory
 
+import io.ktor.server.plugins.*
 import org.example.project.application.dtos.requests.ProductRequest
 import org.example.project.application.dtos.toEntity
 import org.example.project.domain.services.interfaces.IProductService
@@ -22,13 +23,14 @@ class ProductService(
         if (request.name.isBlank() || request.description.isBlank() || request.price <= 0) {
             throw IllegalArgumentException("Input data tidak valid: perlu nama, deskripsi, dan harga")
         }
-        val existingProduct = getById(id)!!
-        val updatedProduct = existingProduct.copy(
-            name = request.name,
-            description = request.description,
-            price = request.price,
-            imageUrl = request.imageUrl ?: existingProduct.imageUrl
-        )
+        if (!repository.findById(id)) {
+            throw NotFoundException("Product dengan id $id tidak ditemukan")
+        }
+        val updatedProduct = request.toEntity()
         return repository.update(id, updatedProduct)
+    }
+
+    override suspend fun getByName(name: String): Product? {
+        TODO("Not yet implemented")
     }
 }
