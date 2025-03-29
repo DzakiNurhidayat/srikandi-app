@@ -1,18 +1,11 @@
 package org.example.project.application.dtos
 
-import kotlinx.serialization.Serializable
+import org.example.project.model.Response
 
-@Serializable
-data class BaseResponse<T>(
-    val status: Boolean,
-    val message: String,
-    val data: T? = null
-)
-
-fun <T> successResponse(data: T, message: String): BaseResponse<T> {
-    return BaseResponse(true, message, data)
+fun <T> successResponse(data: T, message: String): Response<T> {
+    return Response(true, message, data)
 }
 
-fun errorResponse(message: String): BaseResponse<Nothing> {
-    return BaseResponse(false, message)
+fun errorResponse(message: String): Response<Nothing> {
+    return Response(false, message)
 }

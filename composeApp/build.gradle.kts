@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     id("com.google.dagger.hilt.android")
-    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
     alias(libs.plugins.kotlin.plugin.serialization)
 }
 
@@ -34,8 +34,15 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+
+            implementation(libs.kotlin.plugin.serialization)
+
             implementation(projects.shared)
         }
+    }
+
+    sourceSets.all {
+        languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
     }
 }
 
@@ -68,11 +75,23 @@ android {
 
 dependencies {
     implementation(compose.uiTooling)
-    implementation(libs.hilt.android)
-    implementation(libs.androidx.hilt.navigation.compose.v120)
-    "kapt"(libs.hilt.compiler)
-}
 
-kapt {
-    correctErrorTypes = true
+    implementation(libs.hilt.android)
+    "ksp"(libs.hilt.compiler)
+
+    implementation(libs.room.runtime)
+    "ksp"(libs.room.compiler)
+    implementation(libs.room)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.serialization)
+
+    implementation(libs.okHttp)
+    implementation(libs.okHttp.logging)
+
+    implementation(libs.composeui)
+    implementation(libs.composeui.tooling.preview)
+    implementation(libs.composeui.material3)
+
+    implementation(libs.androidx.hilt.navigation.compose.v120)
 }
