@@ -24,6 +24,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlin.plugin.serialization)
+            implementation(libs.kotlinx.datetime)
         }
     }
 }

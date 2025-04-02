@@ -35,4 +35,6 @@ abstract class BaseRepository<T : Table, E, ID>(
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         return LocalDateTime.now().format(formatter)
     }
+
+    fun getCurrentTime(): LocalDateTime = LocalDateTime.now()
 }

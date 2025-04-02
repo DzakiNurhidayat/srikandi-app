@@ -27,7 +27,8 @@ object NetworkModule {
         val client = OkHttpClient.Builder().addInterceptor(logging).build()
 
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:${ServerConfig.SERVER_PORT}/")
+//            .baseUrl("http://10.0.2.2:${ServerConfig.SERVER_PORT}/")
+            .baseUrl("http://192.168.1.10:${ServerConfig.SERVER_PORT}/")
             .client(client)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
