@@ -3,8 +3,6 @@ package org.example.project.utils
 import android.graphics.BlurMaskFilter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -47,31 +45,6 @@ fun Modifier.shadow(
                 paint
             )
         }
-    }
-)
-
-fun Modifier.outerShadow(
-    color: Color = Color.Black,
-    borderRadius: Dp = 20.dp,
-    blurRadius: Dp = 12.dp,
-    offsetY: Dp = 4.dp,
-    offsetX: Dp = 0.dp
-) = this.then(
-    drawBehind {
-        val paint = Paint().apply {
-            isAntiAlias = true
-            asFrameworkPaint().apply {
-                this.color = color.copy(alpha = 0.2f).toArgb() // Soft shadow
-                maskFilter = BlurMaskFilter(blurRadius.toPx(), BlurMaskFilter.Blur.NORMAL)
-            }
-        }
-
-        drawRoundRect(
-            color = color.copy(alpha = 0.2f), // Shadow color
-            topLeft = Offset(offsetX.toPx(), offsetY.toPx()), // Posisi shadow
-            size = size,
-            cornerRadius = CornerRadius(borderRadius.toPx(), borderRadius.toPx())
-        )
     }
 )
 
