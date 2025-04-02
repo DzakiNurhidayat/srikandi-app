@@ -8,7 +8,9 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.example.project.application.dtos.errorResponse
+import org.example.project.application.routes.evidenceRoute
 import org.example.project.application.routes.productRoute
+import org.example.project.application.routes.reportRoute
 import org.example.project.model.Response
 
 fun Application.configureRouting() {
@@ -35,5 +37,7 @@ fun Application.configureRouting() {
         }
         staticResources("static", "static")
         productRoute()
+        reportRoute()
+        evidenceRoute()
     }
 }
