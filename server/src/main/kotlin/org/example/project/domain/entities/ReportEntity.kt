@@ -12,7 +12,6 @@ object Reports : Table("Reports") {
     val tempatKejadian = varchar("tempat_kejadian", 255)
     val tanggalKejadian = varchar("tanggal_kejadian", 10)
     val statusLaporan = varchar("status_laporan", 255)
-    val bukti = text("bukti").nullable()
     val createdAt = varchar("created_at", 25)
     val updatedAt = varchar("updated_at", 25)
 

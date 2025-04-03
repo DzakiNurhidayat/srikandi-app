@@ -40,17 +40,6 @@ fun Application.reportRoute() {
                 reportService.delete(id)
                 call.respond(HttpStatusCode.OK, successResponse(null, "Berhasil menghapus laporan dengan ID $id"))
             }
-            get("/status/{status}") {
-                val status = call.parameters["status"] ?: throw IllegalArgumentException("Status tidak valid")
-                val reports = reportService.getByStatus(status)
-                call.respond(HttpStatusCode.OK, successResponse(reports, "Berhasil mengambil laporan dengan status $status"))
-            }
-            get("/date-range") {
-                val startDate = call.request.queryParameters["startDate"] ?: throw IllegalArgumentException("Tanggal mulai tidak valid")
-                val endDate = call.request.queryParameters["endDate"] ?: throw IllegalArgumentException("Tanggal akhir tidak valid")
-                val reports = reportService.getByDateRange(startDate, endDate)
-                call.respond(HttpStatusCode.OK, successResponse(reports, "Berhasil mengambil laporan dalam rentang tanggal $startDate - $endDate"))
-            }
         }
     }
 }

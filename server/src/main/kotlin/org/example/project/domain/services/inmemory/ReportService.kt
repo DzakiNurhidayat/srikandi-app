@@ -1,20 +1,18 @@
 package org.example.project.domain.services.inmemory
 
 import io.ktor.server.plugins.*
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.example.project.application.dtos.requests.ReportRequest
 import org.example.project.application.dtos.toEntity
 import org.example.project.domain.services.interfaces.IReportService
+import org.example.project.infastructure.repositories.interfaces.IEvidenceRepository
 import org.example.project.infastructure.repositories.interfaces.IReportRepository
+import org.example.project.model.Evidence
 import org.example.project.model.Report
-import java.time.format.DateTimeFormatter
-import java.time.LocalDate as JavaLocalDate
 import java.time.LocalDateTime as JavaLocalDateTime
 
 class ReportService(
-    private val reportRepository: IReportRepository
+    reportRepository: IReportRepository,
+    private val evidenceRepository: IEvidenceRepository
 ) : BaseService<ReportRequest, Int, Report>(reportRepository), IReportService {
 
     override suspend fun create(request: ReportRequest): Report {
@@ -22,12 +20,30 @@ class ReportService(
             request.tempatKejadian.isBlank() || request.tanggalKejadian.isBlank()) {
             throw IllegalArgumentException("Laporan tidak valid: perlu deskripsi, status laporan, jenis kekerasan, tempat kejadian, dan tanggal kejadian")
         }
+
+        if (request.bukti.isEmpty()) {
+            throw IllegalArgumentException("Setiap laporan harus memiliki minimal satu bukti")
+        }
+
+        // Simpan laporan terlebih dahulu
         val newReport = request.toEntity().copy(
             statusLaporan = "Verifikasi",
             createdAt = JavaLocalDateTime.now(),
             updatedAt = JavaLocalDateTime.now()
         )
-        return repository.create(newReport)
+        val savedReport = repository.create(newReport)
+
+        // Simpan bukti yang terkait dengan laporan ini
+        request.bukti.forEachIndexed { index, filePath ->
+            val newEvidence = Evidence(
+                reportId = savedReport.id!!,
+                buktiKe = index + 1,
+                filePath = filePath
+            )
+            evidenceRepository.create(newEvidence)
+        }
+
+        return savedReport.copy(bukti = request.bukti)
     }
 
     override suspend fun update(id: Int, request: ReportRequest): Report {
@@ -35,13 +51,30 @@ class ReportService(
             request.tempatKejadian.isBlank() || request.tanggalKejadian.isBlank()) {
             throw IllegalArgumentException("Laporan tidak valid: perlu deskripsi, status laporan, jenis kekerasan, tempat kejadian, dan tanggal kejadian")
         }
+
         if (!repository.findById(id)) {
             throw NotFoundException("Report dengan id $id tidak ditemukan")
         }
-        val updatedReport = request.toEntity().copy(
-            updatedAt = JavaLocalDateTime.now()
-        )
-        return repository.update(id, updatedReport)
+
+        if (request.bukti.isEmpty()) {
+            throw IllegalArgumentException("Laporan harus memiliki minimal satu bukti")
+        }
+
+        val updatedReport = request.toEntity().copy(updatedAt = JavaLocalDateTime.now())
+        val savedReport = repository.update(id, updatedReport)
+
+        // Hapus bukti lama dan tambahkan bukti baru
+        evidenceRepository.deleteByReportId(id)
+        request.bukti.forEachIndexed { index, filePath ->
+            val newEvidence = Evidence(
+                reportId = id,
+                buktiKe = index + 1,
+                filePath = filePath
+            )
+            evidenceRepository.create(newEvidence)
+        }
+
+        return savedReport.copy(bukti = request.bukti)
     }
 
     override suspend fun delete(id: Int): Boolean {
@@ -54,11 +87,17 @@ class ReportService(
         return true
     }
 
-    override suspend fun getByStatus(status: String): List<Report> {
-        return reportRepository.getByStatus(status)
+    override suspend fun getById(id: Int): Report? {
+        val report = super.getById(id) ?: return null
+        val evidences = evidenceRepository.getByReportId(id)
+        return report.copy(bukti = evidences.mapNotNull { it.filePath })
     }
 
-    override suspend fun getByDateRange(startDate: String, endDate: String): List<Report> {
-        return reportRepository.getByDateRange(startDate, endDate)
+    override suspend fun getAll(): List<Report> {
+        val reports = super.getAll()
+        return reports.map { report ->
+            val evidences = evidenceRepository.getByReportId(report.id!!)
+            report.copy(bukti = evidences.mapNotNull { it.filePath })
+        }
     }
 }

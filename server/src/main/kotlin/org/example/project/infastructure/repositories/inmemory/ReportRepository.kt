@@ -26,7 +26,6 @@ class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.i
                 it[tempatKejadian] = entity.tempatKejadian
                 it[tanggalKejadian] = entity.tanggalKejadian.format(dateFormatter)
                 it[statusLaporan] = entity.statusLaporan
-                it[bukti] = null // Bukti ditambahkan di Evidence
                 it[createdAt] = getCurrentTimeAsString()
                 it[updatedAt] = getCurrentTimeAsString()
             }[Reports.id]
@@ -47,18 +46,6 @@ class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.i
             }
         }
         return getById(id) ?: throw IllegalStateException("Gagal mengambil laporan yang baru diperbarui dengan id: $id")
-    }
-
-    override suspend fun getByStatus(status: String): List<Report> = dbQuery {
-        Reports.selectAll().where { Reports.statusLaporan eq status }
-            .map { rowToEntity(it) }
-    }
-
-    override suspend fun getByDateRange(startDate: String, endDate: String): List<Report> = dbQuery {
-        Reports.selectAll().where {
-            (Reports.tanggalKejadian greaterEq startDate.format(dateFormatter)) and
-                    (Reports.tanggalKejadian lessEq endDate.format(dateFormatter))
-        }.map { rowToEntity(it) }
     }
 
     override suspend fun delete(id: Int): Boolean = dbQuery {

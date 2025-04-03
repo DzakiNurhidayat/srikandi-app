@@ -11,8 +11,10 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
-class EvidenceRepository : BaseRepository<Evidences, Evidence, Pair<Int, Int>>(Evidences, Pair(Evidences.reportId, Evidences.buktiKe)), IEvidenceRepository {
+
+class EvidenceRepository : BasePairRepository<Evidences, Evidence, Pair<Int, Int>>(Evidences, Pair(Evidences.reportId, Evidences.buktiKe)), IEvidenceRepository {
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
     override suspend fun create(entity: Evidence): Evidence {
@@ -33,7 +35,7 @@ class EvidenceRepository : BaseRepository<Evidences, Evidence, Pair<Int, Int>>(E
 
         // Setelah penyisipan, ambil bukti berdasarkan reportId dan buktiKe
         return getById(Pair(entity.reportId, entity.buktiKe))
-            ?: throw IllegalStateException("Gagal membuat bukti dengan ID: ${entity.reportId} dan bukti ke: ${evidence.buktiKe}")
+            ?: throw IllegalStateException("Gagal membuat bukti dengan ID: ${entity.reportId} dan bukti ke: ${entity.buktiKe}")
     }
 
     override suspend fun getByReportId(reportId: Int): List<Evidence> = newSuspendedTransaction {
@@ -57,13 +59,19 @@ class EvidenceRepository : BaseRepository<Evidences, Evidence, Pair<Int, Int>>(E
         return getById(id) ?: throw NotFoundException("Gagal mengambil evidence yang baru diperbarui dengan ID ${id.second} dan Report ID ${id.first}")
     }
 
-
-    override suspend fun delete(id: Pair<Int, Int>): Boolean = newSuspendedTransaction {
-        val deletedCount = Evidences.deleteWhere { (Evidences.reportId eq id.first) and (Evidences.buktiKe eq id.second) }
+    override suspend fun deleteByReportId(reportId: Int): Boolean = newSuspendedTransaction {
+        val deletedCount = Evidences.deleteWhere { Evidences.reportId eq reportId }
         return@newSuspendedTransaction deletedCount > 0
     }
 
-    private fun rowToEntity(row: ResultRow): Evidence {
+    override suspend fun delete(id: Pair<Int, Int>): Boolean = newSuspendedTransaction {
+        val deletedCount = Evidences.deleteWhere {
+            (Evidences.reportId eq id.first) and (Evidences.buktiKe eq id.second)
+        }
+        return@newSuspendedTransaction deletedCount > 0
+    }
+
+    protected override fun rowToEntity(row: ResultRow): Evidence {
         return Evidence(
             reportId = row[Evidences.reportId],
             buktiKe = row[Evidences.buktiKe],

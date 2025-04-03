@@ -5,6 +5,8 @@ import org.example.project.domain.services.inmemory.ProductService
 import org.example.project.domain.services.inmemory.ReportService
 import org.example.project.infastructure.repositories.inmemory.ProductRepository
 import org.example.project.infastructure.repositories.inmemory.ReportRepository
+import org.example.project.infastructure.repositories.inmemory.EvidenceRepository
+import org.example.project.infastructure.repositories.interfaces.IEvidenceRepository
 import org.example.project.infastructure.repositories.interfaces.IProductRepository
 import org.example.project.infastructure.repositories.interfaces.IReportRepository
 import org.koin.dsl.module
@@ -25,5 +27,6 @@ val productModule = module {
 
 val reportModule = module {
     single<IReportRepository> { ReportRepository() }
-    single { ReportService(get()) }
+    single<IEvidenceRepository> { EvidenceRepository() }
+    single { ReportService(get(), get()) }
 }

@@ -16,6 +16,7 @@ data class Report(
     @Contextual
     val tanggalKejadian: LocalDate,
     val statusLaporan: String,
+    val bukti: List<String> = emptyList(),
     @Contextual
     val createdAt: LocalDateTime? = null,
     @Contextual

@@ -41,6 +41,13 @@ class EvidenceService(
         if (!repository.findById(id)) {
             throw NotFoundException("Evidence dengan id $id tidak ditemukan")
         }
+
+        // Cek apakah masih ada bukti lain untuk laporan ini
+        val remainingEvidences = evidenceRepository.getByReportId(id.first)
+        if (remainingEvidences.size == 1) {
+            throw IllegalArgumentException("Tidak dapat menghapus bukti terakhir. Setiap laporan harus memiliki minimal satu bukti.")
+        }
+
         return repository.delete(id)
     }
 
