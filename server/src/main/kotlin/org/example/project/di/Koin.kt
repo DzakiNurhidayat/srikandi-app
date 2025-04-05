@@ -3,6 +3,7 @@ package org.example.project.di
 import io.ktor.server.application.*
 import org.example.project.domain.services.inmemory.ProductService
 import org.example.project.domain.services.inmemory.ReportService
+import org.example.project.domain.services.inmemory.EvidenceService
 import org.example.project.infastructure.repositories.inmemory.ProductRepository
 import org.example.project.infastructure.repositories.inmemory.ReportRepository
 import org.example.project.infastructure.repositories.inmemory.EvidenceRepository
@@ -29,4 +30,5 @@ val reportModule = module {
     single<IReportRepository> { ReportRepository() }
     single<IEvidenceRepository> { EvidenceRepository() }
     single { ReportService(get(), get()) }
+    single { EvidenceService(get()) }
 }

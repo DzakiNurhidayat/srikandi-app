@@ -3,6 +3,8 @@ package org.example.project.domain.services.inmemory
 import io.ktor.server.plugins.*
 import org.example.project.application.dtos.requests.ReportRequest
 import org.example.project.application.dtos.toEntity
+import org.example.project.common.enums.JenisKekerasan
+import org.example.project.common.enums.StatusLaporan
 import org.example.project.domain.services.interfaces.IReportService
 import org.example.project.infastructure.repositories.interfaces.IEvidenceRepository
 import org.example.project.infastructure.repositories.interfaces.IReportRepository
@@ -16,7 +18,7 @@ class ReportService(
 ) : BaseService<ReportRequest, Int, Report>(reportRepository), IReportService {
 
     override suspend fun create(request: ReportRequest): Report {
-        if (request.deskripsi.isBlank() || request.statusLaporan.isBlank() || request.jenisKekerasan.isBlank() ||
+        if (request.deskripsi.isBlank() || request.jenisKekerasan !in JenisKekerasan.entries || request.jenisKekerasan !in JenisKekerasan.entries ||
             request.tempatKejadian.isBlank() || request.tanggalKejadian.isBlank()) {
             throw IllegalArgumentException("Laporan tidak valid: perlu deskripsi, status laporan, jenis kekerasan, tempat kejadian, dan tanggal kejadian")
         }
@@ -27,7 +29,7 @@ class ReportService(
 
         // Simpan laporan terlebih dahulu
         val newReport = request.toEntity().copy(
-            statusLaporan = "Verifikasi",
+            statusLaporan = StatusLaporan.DRAFT,
             createdAt = JavaLocalDateTime.now(),
             updatedAt = JavaLocalDateTime.now()
         )
@@ -47,7 +49,7 @@ class ReportService(
     }
 
     override suspend fun update(id: Int, request: ReportRequest): Report {
-        if (request.deskripsi.isBlank() || request.statusLaporan.isBlank() || request.jenisKekerasan.isBlank() ||
+        if (request.deskripsi.isBlank() || request.jenisKekerasan !in JenisKekerasan.entries || request.jenisKekerasan !in JenisKekerasan.entries ||
             request.tempatKejadian.isBlank() || request.tanggalKejadian.isBlank()) {
             throw IllegalArgumentException("Laporan tidak valid: perlu deskripsi, status laporan, jenis kekerasan, tempat kejadian, dan tanggal kejadian")
         }
@@ -80,7 +82,7 @@ class ReportService(
     override suspend fun delete(id: Int): Boolean {
         val report = repository.getById(id) ?: throw NotFoundException("Report dengan id $id tidak ditemukan")
         val updatedReport = report.copy(
-            statusLaporan = "Dihapus",
+            statusLaporan = StatusLaporan.DELETED,
             updatedAt = JavaLocalDateTime.now()
         )
         repository.update(id, updatedReport)

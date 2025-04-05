@@ -3,7 +3,7 @@ package org.example.project.domain.entities
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 
-object Evidences : Table("Evidence") {
+object Evidences : Table("Evidences") {
 //    val id = integer("id").autoIncrement()
     val reportId = integer("report_id").references(Reports.id, onDelete = ReferenceOption.CASCADE)
     val buktiKe = integer("bukti_ke")

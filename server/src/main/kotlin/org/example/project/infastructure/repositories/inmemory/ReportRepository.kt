@@ -1,5 +1,6 @@
 package org.example.project.infastructure.repositories.inmemory
 
+import org.example.project.common.enums.*
 import org.example.project.domain.entities.Reports
 import org.example.project.infastructure.repositories.interfaces.IReportRepository
 import org.example.project.model.Report
@@ -50,7 +51,7 @@ class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.i
 
     override suspend fun delete(id: Int): Boolean = dbQuery {
         val updatedRows = Reports.update({ Reports.id eq id }) {
-            it[statusLaporan] = "Dihapus" // Tidak menghapus, hanya mengganti status
+            it[statusLaporan] = StatusLaporan.DELETED
             it[updatedAt] = getCurrentTimestamp()
         }
         updatedRows > 0

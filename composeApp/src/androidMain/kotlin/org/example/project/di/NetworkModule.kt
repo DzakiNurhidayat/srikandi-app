@@ -15,6 +15,7 @@ import org.example.project.data.remote.ApiService
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -27,7 +28,7 @@ object NetworkModule {
         val client = OkHttpClient.Builder().addInterceptor(logging).build()
 
         return Retrofit.Builder()
-            .baseUrl("http://${System.getenv() ?: "10.0.2.2"}:${ServerConfig.SERVER_PORT}/")
+            .baseUrl("http://${ServerConfig.SERVER_ANDROID}:${ServerConfig.SERVER_PORT}/")
             .client(client)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()

@@ -4,21 +4,25 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.LocalDateTime
-
+import org.example.project.common.serialization.*
+import org.example.project.common.enums.*
 
 @Serializable
 data class Report(
     var id: Int? = null,
     val isKorban: Boolean,
     val deskripsi: String,
-    val jenisKekerasan: String,
+    val jenisKekerasan: JenisKekerasan,
     val tempatKejadian: String,
-    @Contextual
+
+    @Serializable(with = LocalDateSerializer::class)
     val tanggalKejadian: LocalDate,
-    val statusLaporan: String,
+    val statusLaporan: StatusLaporan,
     val bukti: List<String> = emptyList(),
-    @Contextual
+
+    @Serializable(with = LocalDateTimeSerializer::class)
     val createdAt: LocalDateTime? = null,
-    @Contextual
+
+    @Serializable(with = LocalDateTimeSerializer::class)
     val updatedAt: LocalDateTime? = null
 )
