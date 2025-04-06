@@ -1,11 +1,11 @@
 package org.example.project.domain.services.inmemory
 
 import io.ktor.server.plugins.*
-import org.example.project.application.dtos.requests.ProductRequest
 import org.example.project.application.dtos.toEntity
 import org.example.project.domain.services.interfaces.IProductService
 import org.example.project.infastructure.repositories.interfaces.IProductRepository
-import org.example.project.model.Product
+import org.example.project.model.entities.Product
+import org.example.project.model.request.ProductRequest
 
 class ProductService(
     productRepository: IProductRepository

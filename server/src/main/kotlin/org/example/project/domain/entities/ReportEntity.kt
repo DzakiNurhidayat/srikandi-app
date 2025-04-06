@@ -1,6 +1,7 @@
 package org.example.project.domain.entities
 
-import org.example.project.common.enums.*
+import org.example.project.common.enums.JenisKekerasan
+import org.example.project.common.enums.StatusLaporan
 import org.jetbrains.exposed.sql.Table
 
 object Reports : Table("Reports") {

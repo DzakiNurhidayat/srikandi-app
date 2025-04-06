@@ -1,11 +1,12 @@
-package org.example.project.model
+package org.example.project.model.entities
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import org.example.project.common.enums.JenisKekerasan
+import org.example.project.common.enums.StatusLaporan
+import org.example.project.common.serialization.LocalDateSerializer
+import org.example.project.common.serialization.LocalDateTimeSerializer
 import java.time.LocalDate
 import java.time.LocalDateTime
-import org.example.project.common.serialization.*
-import org.example.project.common.enums.*
 
 @Serializable
 data class Report(

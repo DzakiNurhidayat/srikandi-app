@@ -2,7 +2,7 @@ package org.example.project.infastructure.repositories.inmemory
 
 import org.example.project.domain.entities.Products
 import org.example.project.infastructure.repositories.interfaces.IProductRepository
-import org.example.project.model.Product
+import org.example.project.model.entities.Product
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll

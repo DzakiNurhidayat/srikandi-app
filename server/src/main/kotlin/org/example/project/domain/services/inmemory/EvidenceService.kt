@@ -1,11 +1,11 @@
 package org.example.project.domain.services.inmemory
 
 import io.ktor.server.plugins.*
-import org.example.project.application.dtos.requests.EvidenceRequest
 import org.example.project.application.dtos.toEntity
 import org.example.project.domain.services.interfaces.IEvidenceService
 import org.example.project.infastructure.repositories.interfaces.IEvidenceRepository
-import org.example.project.model.Evidence
+import org.example.project.model.entities.Evidence
+import org.example.project.model.request.EvidenceRequest
 
 class EvidenceService(
     private val evidenceRepository: IEvidenceRepository

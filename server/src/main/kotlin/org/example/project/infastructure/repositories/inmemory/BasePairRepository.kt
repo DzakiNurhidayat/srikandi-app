@@ -1,6 +1,5 @@
 package org.example.project.infastructure.repositories.inmemory
 
-import org.example.project.domain.entities.Evidences
 import org.example.project.infastructure.repositories.interfaces.IEntityRepository
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq

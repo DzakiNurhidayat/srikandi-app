@@ -1,11 +1,7 @@
-package org.example.project.model
+package org.example.project.model.entities
 
-import kotlinx.serialization.Serializable
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class Evidence(

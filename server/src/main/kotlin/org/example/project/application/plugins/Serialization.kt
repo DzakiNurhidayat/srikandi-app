@@ -5,7 +5,6 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import org.example.project.common.serialization.LocalDateSerializer
 import org.example.project.common.serialization.LocalDateTimeSerializer
 import java.time.LocalDate

@@ -1,19 +1,20 @@
 package org.example.project.domain.services.inmemory
 
 import io.ktor.server.plugins.*
-import org.example.project.application.dtos.requests.ReportRequest
 import org.example.project.application.dtos.toEntity
 import org.example.project.common.enums.JenisKekerasan
 import org.example.project.common.enums.StatusLaporan
 import org.example.project.domain.services.interfaces.IReportService
 import org.example.project.infastructure.repositories.interfaces.IEvidenceRepository
 import org.example.project.infastructure.repositories.interfaces.IReportRepository
-import org.example.project.model.Evidence
-import org.example.project.model.Report
+import org.example.project.model.entities.Report
+import org.example.project.model.entities.Evidence
+import org.example.project.model.request.ReportRequest
+import org.example.project.model.request.StatusLaporanRequest
 import java.time.LocalDateTime as JavaLocalDateTime
 
 class ReportService(
-    reportRepository: IReportRepository,
+    private val reportRepository: IReportRepository,
     private val evidenceRepository: IEvidenceRepository
 ) : BaseService<ReportRequest, Int, Report>(reportRepository), IReportService {
 
@@ -101,5 +102,12 @@ class ReportService(
             val evidences = evidenceRepository.getByReportId(report.id!!)
             report.copy(bukti = evidences.mapNotNull { it.filePath })
         }
+    }
+
+    override suspend fun updateStatusLaporan(id: Int, status: StatusLaporanRequest): Boolean {
+        if (!repository.findById(id)) {
+            throw NotFoundException("Laporan dengan id $id tidak ditemukan")
+        }
+        return reportRepository.updateStatusLaporan(id, status.statusLaporan)
     }
 }

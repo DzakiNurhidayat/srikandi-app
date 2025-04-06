@@ -1,7 +1,7 @@
 package org.example.project.data.repository
 
 import org.example.project.data.remote.ApiService
-import org.example.project.model.Product
+import org.example.project.model.entities.Product
 import org.example.project.model.Response
 import javax.inject.Inject
 

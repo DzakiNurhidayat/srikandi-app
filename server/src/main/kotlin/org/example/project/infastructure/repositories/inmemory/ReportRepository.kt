@@ -1,20 +1,17 @@
 package org.example.project.infastructure.repositories.inmemory
 
-import org.example.project.common.enums.*
+import org.example.project.common.enums.StatusLaporan
 import org.example.project.domain.entities.Reports
 import org.example.project.infastructure.repositories.interfaces.IReportRepository
-import org.example.project.model.Report
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.example.project.domain.entities.Products
-import org.example.project.model.Product
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.example.project.model.entities.Report
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.update
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate as JavaLocalDate
 import java.time.LocalDateTime as JavaLocalDateTime
 
 class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.id), IReportRepository {
-
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
@@ -69,6 +66,13 @@ class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.i
             createdAt = JavaLocalDateTime.parse(row[Reports.createdAt], dateTimeFormatter),
             updatedAt = row[Reports.updatedAt].takeIf { it.isNotEmpty() }?.let { JavaLocalDateTime.parse(it, dateTimeFormatter) }
         )
+    }
+
+    override suspend fun updateStatusLaporan(id: Int, status: StatusLaporan): Boolean = dbQuery {
+        Reports.update({ Reports.id eq id }) {
+            it[statusLaporan] = status
+            it[updatedAt] = getCurrentTimestamp()
+        } > 0
     }
 
     private fun getCurrentTimeAsString(): String {

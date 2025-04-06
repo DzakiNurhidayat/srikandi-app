@@ -1,11 +1,11 @@
 package org.example.project.application.dtos
 
-import org.example.project.application.dtos.requests.EvidenceRequest
-import org.example.project.application.dtos.requests.ProductRequest
-import org.example.project.application.dtos.requests.ReportRequest
-import org.example.project.model.Evidence
-import org.example.project.model.Product
-import org.example.project.model.Report
+import org.example.project.model.entities.Report
+import org.example.project.model.entities.Evidence
+import org.example.project.model.entities.Product
+import org.example.project.model.request.EvidenceRequest
+import org.example.project.model.request.ProductRequest
+import org.example.project.model.request.ReportRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -37,7 +37,6 @@ fun ReportRequest.toEntity(): Report {
 }
 
 fun EvidenceRequest.toEntity(buktiKe: Int): Evidence {
-
     return Evidence(
         reportId = this.reportId,
         buktiKe = buktiKe,

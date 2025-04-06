@@ -1,17 +1,19 @@
 package org.example.project.ui.screens.ketua
 
 import android.R
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,15 +26,28 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import org.example.project.data.model.Filter
+import org.example.project.model.entities.Report
 import org.example.project.ui.components.CustomButton
 import org.example.project.ui.components.FilterChip
 import org.example.project.ui.theme.Divider
+import org.example.project.ui.viewmodel.ReportViewModel
+import org.example.project.ui.viewmodel.shared.SharedReportViewModel
 import org.example.project.utils.shadow
+import org.example.project.utils.toReadableString
+import java.time.format.DateTimeFormatter
+import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DashboardScreen(navController: NavHostController) {
+fun DashboardScreen(
+    navController: NavHostController,
+    viewModel: ReportViewModel = hiltViewModel(),
+    sharedViewModel: SharedReportViewModel
+) {
+    val reports by viewModel.reports.collectAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -41,9 +56,16 @@ fun DashboardScreen(navController: NavHostController) {
         HeaderSection()
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider(thickness = 2.dp, color = Divider)
-        TotalCase()
+        TotalCase(reports.size)
         FilterKasus()
-        CaseCard(navController)
+
+        val formattedReports = reports
+        LazyColumn {
+            items(formattedReports) { report ->
+                CaseCard(navController, report)
+            }
+        }
+
     }
 }
 
@@ -65,7 +87,7 @@ fun HeaderSection() {
 }
 
 @Composable
-fun TotalCase() {
+fun TotalCase(totalCases: Int) {
     Column(
         modifier = Modifier
             .padding(vertical = 20.dp, horizontal = 30.dp)
@@ -103,7 +125,7 @@ fun TotalCase() {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "10 Total Kasus", fontSize = 15.sp, fontWeight = FontWeight.Bold
+                        text = "$totalCases Total Kasus", fontSize = 15.sp, fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -151,8 +173,17 @@ fun FilterKasus() {
     }
 }
 
+// DashboardKetua.kt
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun CaseCard(navController: NavHostController) {
+fun CaseCard(
+    navController: NavHostController,
+    report: Report,
+    sharedViewModel: SharedReportViewModel = hiltViewModel()
+) {
+    val formattedDate = remember(report.tanggalKejadian) {
+        report.tanggalKejadian.format(DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(Locale("id")))
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -169,7 +200,7 @@ fun CaseCard(navController: NavHostController) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Restu Akbar", fontWeight = FontWeight.Bold)
+            Text(text = "Haikal Hariyanto", fontWeight = FontWeight.Bold)
             Text(text = "Teknik Komputer dan Informatika '23", fontSize = 12.sp, color = Color.Gray)
             Spacer(modifier = Modifier.height(10.dp))
             Row(
@@ -187,7 +218,7 @@ fun CaseCard(navController: NavHostController) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Kekerasan Seksual",
+                        text = report.jenisKekerasan.toReadableString(),
                         fontSize = 13.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -205,7 +236,7 @@ fun CaseCard(navController: NavHostController) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "22 Juni 2024",
+                        text = formattedDate,
                         fontSize = 13.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -223,7 +254,7 @@ fun CaseCard(navController: NavHostController) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Gedung JTK",
+                        text = report.tempatKejadian,
                         fontSize = 13.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -234,7 +265,10 @@ fun CaseCard(navController: NavHostController) {
             Spacer(modifier = Modifier.height(10.dp))
             CustomButton(
                 text = "Verifikasi",
-                onClick = { navController.navigate("verifikasi_kasus/${1}") },
+                onClick = {
+                    sharedViewModel.setReport(report)
+                    navController.navigate("verifikasi_kasus")
+                },
                 modifier = Modifier.padding(16.dp),
                 borderRadius = 50
             )
@@ -242,21 +276,21 @@ fun CaseCard(navController: NavHostController) {
     }
 }
 
-@Composable
-fun BottomNavigationBar() {
-    BottomAppBar(containerColor = Color.White) {
-        IconButton(onClick = {}) {
-            Icon(painter = painterResource(id = android.R.drawable.ic_menu_compass), contentDescription = "Home")
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = {}) {
-            Icon(painter = painterResource(id = android.R.drawable.ic_input_add), contentDescription = "Add")
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = {}) {
-            Icon(
-                painter = painterResource(id = android.R.drawable.ic_menu_info_details), contentDescription = "Profile"
-            )
-        }
-    }
-}
+//@Composable
+//fun BottomNavigationBar() {
+//    BottomAppBar(containerColor = Color.White) {
+//        IconButton(onClick = {}) {
+//            Icon(painter = painterResource(id = android.R.drawable.ic_menu_compass), contentDescription = "Home")
+//        }
+//        Spacer(modifier = Modifier.weight(1f))
+//        IconButton(onClick = {}) {
+//            Icon(painter = painterResource(id = android.R.drawable.ic_input_add), contentDescription = "Add")
+//        }
+//        Spacer(modifier = Modifier.weight(1f))
+//        IconButton(onClick = {}) {
+//            Icon(
+//                painter = painterResource(id = android.R.drawable.ic_menu_info_details), contentDescription = "Profile"
+//            )
+//        }
+//    }
+//}

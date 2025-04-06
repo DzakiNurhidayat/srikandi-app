@@ -8,13 +8,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.example.project.data.repository.ProductRepository
-import org.example.project.model.Product
+import org.example.project.model.entities.Product
 import javax.inject.Inject
 
 @HiltViewModel
 class ProductViewModel @Inject constructor(private val repository: ProductRepository) : ViewModel() {
     val products = MutableStateFlow<List<Product>>(emptyList())
-
     init {
         viewModelScope.launch {
             try {
@@ -27,5 +26,4 @@ class ProductViewModel @Inject constructor(private val repository: ProductReposi
             }
         }
     }
-
 }

@@ -5,9 +5,9 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.example.project.application.dtos.requests.ProductRequest
 import org.example.project.application.dtos.successResponse
 import org.example.project.domain.services.inmemory.ProductService
+import org.example.project.model.request.ProductRequest
 import org.koin.ktor.ext.inject
 
 fun Application.productRoute() {
