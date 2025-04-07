@@ -11,6 +11,8 @@ import org.example.project.model.entities.Report
 import org.example.project.model.entities.Evidence
 import org.example.project.model.request.ReportRequest
 import org.example.project.model.request.StatusLaporanRequest
+import org.jetbrains.exposed.sql.exposedLogger
+import kotlin.math.log
 import java.time.LocalDateTime as JavaLocalDateTime
 
 class ReportService(

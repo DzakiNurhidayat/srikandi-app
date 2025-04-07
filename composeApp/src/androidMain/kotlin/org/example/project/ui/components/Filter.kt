@@ -47,7 +47,7 @@ fun FilterChip(
     Surface(
         modifier = if (selected) {
             modifier.shadow(
-                color = Color.Black.copy(alpha = 0.5f),
+                color = Color.Black.copy(alpha = 0.2f),
                 borderRadius = 20.dp,
                 blurRadius = 15.dp,
                 offsetX = 2.dp,

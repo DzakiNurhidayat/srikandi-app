@@ -2,16 +2,23 @@ package org.example.project.ui.screens.ketua
 
 import android.R
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,46 +35,86 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import org.example.project.common.enums.StatusLaporan
 import org.example.project.data.model.Filter
 import org.example.project.model.entities.Report
 import org.example.project.ui.components.CustomButton
 import org.example.project.ui.components.FilterChip
 import org.example.project.ui.theme.Divider
 import org.example.project.ui.viewmodel.ReportViewModel
-import org.example.project.ui.viewmodel.shared.SharedReportViewModel
+import org.example.project.ui.viewmodel.VerifikasiViewModel
 import org.example.project.utils.shadow
 import org.example.project.utils.toReadableString
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+@OptIn(ExperimentalMaterialApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DashboardScreen(
     navController: NavHostController,
     viewModel: ReportViewModel = hiltViewModel(),
-    sharedViewModel: SharedReportViewModel
+    verifikasiViewModel: VerifikasiViewModel
 ) {
     val reports by viewModel.reports.collectAsState()
-    Column(
+    val isRefreshing = remember { mutableStateOf(false) }
+    val selectedFilter = remember { mutableStateOf("All") }
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing.value,
+        onRefresh = {
+            isRefreshing.value = true
+            viewModel.getReports {
+                isRefreshing.value = false
+            }
+        }
+    )
+
+
+
+    LaunchedEffect(Unit) {
+        viewModel.getReports()
+    }
+    LaunchedEffect(reports) {
+        isRefreshing.value = false
+    }
+
+    val filteredReports = filterReports(reports, selectedFilter.value)
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .pullRefresh(pullRefreshState)
     ) {
-        HeaderSection()
-        Spacer(modifier = Modifier.height(8.dp))
-        HorizontalDivider(thickness = 2.dp, color = Divider)
-        TotalCase(reports.size)
-        FilterKasus()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+        ) {
+            HeaderSection()
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(thickness = 2.dp, color = Divider)
+            TotalCase(filteredReports.size)
+            FilterKasus(selectedFilter)
+        }
 
-        val formattedReports = reports
-        LazyColumn {
-            items(formattedReports) { report ->
-                CaseCard(navController, report)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 390.dp)
+        ) {
+            items(filteredReports) { report ->
+                CaseCard(navController, verifikasiViewModel, report)
             }
         }
 
+        PullRefreshIndicator(
+            refreshing = isRefreshing.value,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
+
 
 @Composable
 fun HeaderSection() {
@@ -143,43 +190,53 @@ fun TotalCase(totalCases: Int) {
 }
 
 @Composable
-fun FilterKasus() {
-    val filters = remember {
-        listOf(
-            Filter(name = "All", enabled = mutableStateOf(true)),
-            Filter(name = "Assign", enabled = mutableStateOf(false)),
-            Filter(name = "In Progress", enabled = mutableStateOf(false)),
-            Filter(name = "Done", enabled = mutableStateOf(false))
-        )
-    }
-
+fun FilterKasus(
+    selectedFilter: MutableState<String>
+) {
+    val filters = listOf("All", "Assign", "In Progress", "Done")
     LazyRow(
         modifier = Modifier
             .padding(vertical = 5.dp, horizontal = 30.dp)
             .fillMaxWidth()
     ) {
-        items(filters.size) { index ->
-            val filter = filters[index]
-
+        items(filters) { filter ->
+            val isSelected = selectedFilter.value == filter
             FilterChip(
-                filter = filter,
-                onSelected = { selectedFilter ->
-                    filters.forEach { it.enabled.value = it == selectedFilter }
+                filter = Filter(name = filter, enabled = mutableStateOf(isSelected)),
+                onSelected = {
+                    selectedFilter.value = filter
                 },
-                modifier = Modifier
-                    .padding(end = 5.dp)
+                modifier = Modifier.padding(end = 5.dp)
             )
         }
     }
 }
 
-// DashboardKetua.kt
+fun filterReports(reports: List<Report>, selectedFilter: String): List<Report> {
+    val filtered = reports.filter { it.statusLaporan != StatusLaporan.REJECTED }
+    return when (selectedFilter) {
+        "Assign" -> filtered.filter {
+            it.statusLaporan in listOf(
+                StatusLaporan.DRAFT,
+                StatusLaporan.VERIFIED,
+                StatusLaporan.DELETED,
+                StatusLaporan.TEAMED,
+                StatusLaporan.FORM1
+            )
+        }
+
+        "In Progress" -> filtered.filter { it.statusLaporan == StatusLaporan.FORM2 }
+        "Done" -> filtered.filter { it.statusLaporan == StatusLaporan.DONE }
+        else -> filtered
+    }
+}
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CaseCard(
     navController: NavHostController,
-    report: Report,
-    sharedViewModel: SharedReportViewModel = hiltViewModel()
+    verifikasiViewModel: VerifikasiViewModel,
+    report: Report
 ) {
     val formattedDate = remember(report.tanggalKejadian) {
         report.tanggalKejadian.format(DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(Locale("id")))
@@ -263,11 +320,27 @@ fun CaseCard(
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
+            val buttonText = when (report.statusLaporan) {
+                StatusLaporan.DRAFT, StatusLaporan.DELETED -> "Verifikasi"
+                StatusLaporan.VERIFIED -> "Pengisian Form 1"
+                StatusLaporan.TEAMED, StatusLaporan.FORM2, StatusLaporan.DONE -> "Detail Laporan"
+                else -> "Detail Laporan"
+            }
             CustomButton(
-                text = "Verifikasi",
+                text = buttonText,
                 onClick = {
-                    sharedViewModel.setReport(report)
-                    navController.navigate("verifikasi_kasus")
+                    verifikasiViewModel.setReport(report)
+                    when (report.statusLaporan) {
+                        StatusLaporan.DRAFT,
+                        StatusLaporan.DELETED -> navController.navigate("verifikasi_kasus")
+
+                        StatusLaporan.VERIFIED -> navController.navigate("under_development")
+                        StatusLaporan.TEAMED,
+                        StatusLaporan.FORM2,
+                        StatusLaporan.DONE -> navController.navigate("under_development")
+
+                        else -> navController.navigate("under_development")
+                    }
                 },
                 modifier = Modifier.padding(16.dp),
                 borderRadius = 50

@@ -1,11 +1,10 @@
 package org.example.project.common.enums
 
 enum class StatusLaporan {
+    DELETED,
     DRAFT,
     VERIFIED,
     REJECTED,
-    PENDING,
-    DELETED,
     FORM1,
     TEAMED,
     FORM2,

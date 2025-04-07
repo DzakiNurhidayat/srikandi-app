@@ -24,6 +24,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.composeui.tooling.preview)
+            implementation(libs.androidx.compose.foundation)
         }
 
         commonMain.dependencies {

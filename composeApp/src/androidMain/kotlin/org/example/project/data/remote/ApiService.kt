@@ -20,5 +20,5 @@ interface ApiService {
     suspend fun updateStatus(
         @Path("id") id: Int,
         @Body statusRequest: StatusLaporanRequest
-    ): Response<Unit>
+    ): Response<Boolean>
 }

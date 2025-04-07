@@ -1,7 +1,6 @@
 package org.example.project.ui.screens.ketua
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,39 +14,36 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import org.example.project.common.enums.StatusLaporan
 import org.example.project.ui.components.CustomButton
+import org.example.project.ui.components.confirmationDialog
+import org.example.project.ui.navigation.Screen
 import org.example.project.ui.theme.Divider
 import org.example.project.ui.theme.TextVerifikasi
-import org.example.project.ui.viewmodel.ReportViewModel
-import org.example.project.ui.viewmodel.shared.SharedReportViewModel
+import org.example.project.ui.viewmodel.VerifikasiViewModel
 import org.example.project.utils.toReadableString
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun VerifikasiScreen(
     navController: NavHostController,
-    viewModel: ReportViewModel = hiltViewModel(),
-    sharedViewModel: SharedReportViewModel
+    viewModel: VerifikasiViewModel
 ) {
     val textSize = 16.sp
-    val report = sharedViewModel.selectedReport.value
-    Log.d("VerifikasiScreen", "Report: $report")
+    val report by viewModel.report
+    var showRejectDialog by remember { mutableStateOf(false) }
+    var showAcceptDialog by remember { mutableStateOf(false) }
+
     if (report != null) {
         Column(
             modifier = Modifier
@@ -93,79 +89,65 @@ fun VerifikasiScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 40.dp, vertical = 20.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.Top
+                val infoList = listOf(
+                    "Pelapor" to "Haikal Hariyanto",
+                    "NIM/NIP" to "231511081",
+                    "No Telp" to "095555555",
+                    "Jurusan" to "Teknik Komputer dan Informatika '23",
+                    "Status Pelapor" to if (report!!.isKorban) "Korban" else "Saksi",
+                    "Tempat Kejadian" to (report!!.tempatKejadian ?: "-"),
+                    "Waktu Kejadian" to "${report!!.tanggalKejadian} (${
+                        ChronoUnit.DAYS.between(
+                            LocalDate.parse(report!!.tanggalKejadian.toString()),
+                            LocalDate.now()
+                        )
+                    } hari yang lalu)",
+                    "Bentuk Kekerasan" to report!!.jenisKekerasan.toReadableString(),
+                )
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f),
-                        horizontalAlignment = Alignment.Start,
-                        verticalArrangement = Arrangement.spacedBy(15.dp)
-                    ) {
-                        Text("Pelapor", color = TextVerifikasi, fontSize = textSize)
-                        Text("NIM/NIP", color = TextVerifikasi, fontSize = textSize)
-                        Text("No Telp", color = TextVerifikasi, fontSize = textSize)
-                        Text("Jurusan", color = TextVerifikasi, fontSize = textSize)
-                        Text("Status Pelapor", color = TextVerifikasi, fontSize = textSize)
-                        Text("Tempat Kejadian", color = TextVerifikasi, fontSize = textSize)
-                        Text("Waktu Kejadian", color = TextVerifikasi, fontSize = textSize)
-                        Text("Bentuk Kekerasan", color = TextVerifikasi, fontSize = textSize)
-                        Text("Deskripsi Kejadian", color = TextVerifikasi, fontSize = textSize)
-                    }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f),
-                        horizontalAlignment = Alignment.Start,
-                        verticalArrangement = Arrangement.spacedBy(15.dp)
-                    ) {
-                        Text("Haikal Hariyanto", fontSize = textSize, fontWeight = FontWeight.SemiBold)
-                        Text("231511070", fontSize = textSize, fontWeight = FontWeight.SemiBold)
-                        Text("095555555", fontSize = textSize, fontWeight = FontWeight.SemiBold)
-                        Text("Teknik Komputer", fontSize = textSize, fontWeight = FontWeight.SemiBold)
-                        report?.let { report ->
-                            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            val tanggalKejadian = LocalDate.parse(report.tanggalKejadian.toString(), formatter)
-                            val hariIni = LocalDate.now()
-                            val selisihHari = ChronoUnit.DAYS.between(tanggalKejadian, hariIni)
-
+                    infoList.forEach { (label, value) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
                             Text(
-                                if (report.isKorban) "Korban" else "Saksi",
+                                text = label,
+                                color = TextVerifikasi,
                                 fontSize = textSize,
-                                fontWeight = FontWeight.SemiBold
+                                modifier = Modifier.weight(1f)
                             )
-
-                            Text(report.tempatKejadian ?: "-")
-
                             Text(
-                                "${report.tanggalKejadian} (${selisihHari} hari yang lalu)",
+                                text = value,
                                 fontSize = textSize,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.weight(1f)
                             )
-
-                            Text(
-                                report.jenisKekerasan.toReadableString(),
-                                fontSize = textSize,
-                                fontWeight = FontWeight.SemiBold
-                            )
-
-                            TextField(
-                                value = report.deskripsi ?: "",
-                                onValueChange = {},
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp)
-                                    .border(2.dp, Divider, shape = MaterialTheme.shapes.small)
-                                    .background(Color.White, shape = MaterialTheme.shapes.small),
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.White,
-                                    unfocusedContainerColor = Color.White,
-                                    disabledContainerColor = Color.Gray
-                                )
-                            )
-                        } ?: Text("Data laporan tidak tersedia.")
-
+                        }
                     }
                 }
+                Text(
+                    "Deskripsi Kejadian",
+                    color = TextVerifikasi,
+                    fontSize = textSize,
+                    modifier = Modifier.padding(vertical = 15.dp)
+                )
+                TextField(
+                    value = report?.deskripsi ?: "",
+                    onValueChange = {},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .border(2.dp, Color.Black, shape = MaterialTheme.shapes.small)
+                        .background(Color.White, shape = MaterialTheme.shapes.small),
+                    colors = TextFieldDefaults.colors(
+                        disabledContainerColor = Color.White,
+                        disabledTextColor = Color.Black
+                    ),
+                    enabled = false
+                )
 
                 Text(
                     "Bukti Pendukung",
@@ -221,7 +203,7 @@ fun VerifikasiScreen(
             ) {
                 CustomButton(
                     text = "Tolak",
-                    onClick = { viewModel.updateReportStatus(report?.id!!, StatusLaporan.REJECTED) },
+                    onClick = { showRejectDialog = true },
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 10.dp),
@@ -229,7 +211,7 @@ fun VerifikasiScreen(
                 )
                 CustomButton(
                     text = "Terima",
-                    onClick = { viewModel.updateReportStatus(report?.id!!, StatusLaporan.REJECTED) },
+                    onClick = { showAcceptDialog = true },
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 10.dp),
@@ -242,5 +224,39 @@ fun VerifikasiScreen(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Data tidak ditemukan")
         }
+    }
+    if (showRejectDialog) {
+        confirmationDialog(
+            title = "Tolak Laporan",
+            message = "Apakah kamu yakin ingin menolak laporan ini?",
+            confirmText = "Tolak",
+            confirmButtonColor = Color.Red,
+            onConfirm = {
+                showRejectDialog = false
+                viewModel.updateReportStatus(report?.id!!, StatusLaporan.REJECTED)
+                navController.navigate(Screen.DashboardKetua.route) {
+                    popUpTo(Screen.DashboardKetua.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            },
+            onDismiss = { showRejectDialog = false }
+        )
+    }
+    if (showAcceptDialog) {
+        confirmationDialog(
+            title = "Terima Laporan",
+            message = "Apakah kamu yakin ingin menerima laporan ini?",
+            confirmText = "Terima",
+            confirmButtonColor = Color.Blue,
+            onConfirm = {
+                showAcceptDialog = false
+                viewModel.updateReportStatus(report?.id!!, StatusLaporan.VERIFIED)
+                navController.navigate(Screen.DashboardKetua.route) {
+                    popUpTo(Screen.DashboardKetua.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            },
+            onDismiss = { showAcceptDialog = false }
+        )
     }
 }
