@@ -6,9 +6,8 @@ enum class StatusLaporan {
     REJECTED,
     PENDING,
     DELETED,
-    CALLUP,
-    TEAMED,
     FORM1,
+    TEAMED,
     FORM2,
     DONE,
 }
