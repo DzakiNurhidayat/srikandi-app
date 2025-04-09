@@ -1,4 +1,4 @@
-package org.example.project.data.repository
+package org.example.project.data.repositories
 
 import org.example.project.data.remote.ApiService
 import org.example.project.model.entities.Product

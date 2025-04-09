@@ -2,12 +2,14 @@ package org.example.project.ui.navigation
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.google.firebase.messaging.FirebaseMessaging
 import org.example.project.ui.screens.ProductScreen
 import org.example.project.ui.screens.UnderDevelopmentScreen
 import org.example.project.ui.screens.ketua.DashboardScreen
@@ -20,6 +22,7 @@ sealed class Screen(val route: String) {
     object VerifikasiKasus : Screen("verifikasi_kasus")
     object UnderDev : Screen("under_development")
 }
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -41,6 +44,15 @@ fun navGraph(navController: NavHostController) {
         }
         composable(Screen.UnderDev.route) {
             UnderDevelopmentScreen()
+        }
+
+        composable("feature_screen/{featureId}") { backStackEntry ->
+            val featureId = backStackEntry.arguments?.getString("featureId") ?: "Unknown"
+            Text("Feature Screen with ID: $featureId")
+        }
+        composable("notification_screen/{data}") { backStackEntry ->
+            val data = backStackEntry.arguments?.getString("data") ?: "No Data"
+            Text("Notification Data: $data")
         }
     }
 }

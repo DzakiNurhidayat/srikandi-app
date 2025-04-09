@@ -46,6 +46,11 @@ dependencies {
 
     implementation(libs.kotlinx.datetime)
 
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.google.auth.library.oauth2.http)
+
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 }

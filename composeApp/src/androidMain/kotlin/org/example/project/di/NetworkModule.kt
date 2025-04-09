@@ -1,6 +1,6 @@
 package org.example.project.di
 
-import org.example.project.data.repository.ProductRepository
+import org.example.project.data.repositories.ProductRepository
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides

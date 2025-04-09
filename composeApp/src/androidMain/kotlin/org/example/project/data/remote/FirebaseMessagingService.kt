@@ -1,0 +1,100 @@
+package org.example.project.data.remote
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.media.RingtoneManager
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.example.project.MainActivity
+import org.example.project.R
+import org.example.project.firebase.FcmTokenManager
+
+class MyFirebaseMessagingService : FirebaseMessagingService() {
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        super.onMessageReceived(remoteMessage)
+        remoteMessage.notification?.let {
+            showNotification(
+                it.title ?: "Default Title",
+                it.body ?: "Default Body",
+                remoteMessage.data
+            )
+        }
+    }
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        println("FCM Token: $token")
+        CoroutineScope(Dispatchers.IO).launch {
+            sendTokenToServer("user123", token)
+        }
+    }
+
+    private suspend fun sendTokenToServer(userId: String, token: String) {
+        FcmTokenManager.registerToken(userId, token)
+    }
+
+    private fun showNotification(title: String, message: String, data: Map<String, String> = emptyMap()) {
+        val channelId = "default_channel_id"
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Default Channel",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                enableLights(true)
+                lightColor = Color.BLUE
+                enableVibration(true)
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("notification_data", data["custom_key"])
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val actionIntent = Intent(this, MainActivity::class.java).apply {
+            putExtra("action", "open_feature")
+        }
+        val actionPendingIntent = PendingIntent.getActivity(
+            this,
+            1,
+            actionIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val largeIcon = BitmapFactory.decodeResource(resources, R.drawable.satgas_ppkpt)
+        val builder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setLargeIcon(largeIcon)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .addAction(0, "Buka", actionPendingIntent)
+            .setColor(Color.parseColor("#FF6200EE"))
+            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+
+
+        notificationManager.notify(System.currentTimeMillis().toInt(), builder.build())
+    }
+}

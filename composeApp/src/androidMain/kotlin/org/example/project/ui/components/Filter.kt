@@ -21,8 +21,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.example.project.data.model.Filter
-import org.example.project.ui.theme.warna1
-import org.example.project.ui.theme.Divider
 import org.example.project.utils.shadow
 
 
@@ -35,12 +33,12 @@ fun FilterChip(
 ) {
     val selected by filter.enabled
     val backgroundColor by animateColorAsState(
-        if (selected) warna1 else Divider,
+        if (selected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.secondary,
         label = "background color"
     )
 
     val textColor by animateColorAsState(
-        if (selected) Color.White else MaterialTheme.colorScheme.onBackground,
+        if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface,
         label = "text color"
     )
 

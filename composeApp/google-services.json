@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "925612449196",
+    "project_id": "srikandi-app",
+    "storage_bucket": "srikandi-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925612449196:android:1453641b03edc438f0ae09",
+        "android_client_info": {
+          "package_name": "org.example.project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhfdKz_9vg0nNI9LUd0ZOVCh0q7LkAamo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

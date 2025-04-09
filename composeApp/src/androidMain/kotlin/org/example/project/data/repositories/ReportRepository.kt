@@ -1,4 +1,4 @@
-package org.example.project.data.repository
+package org.example.project.data.repositories
 
 import org.example.project.common.enums.StatusLaporan
 import org.example.project.data.remote.ApiService

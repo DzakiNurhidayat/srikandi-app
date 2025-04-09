@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,8 +27,7 @@ import org.example.project.common.enums.StatusLaporan
 import org.example.project.ui.components.CustomButton
 import org.example.project.ui.components.confirmationDialog
 import org.example.project.ui.navigation.Screen
-import org.example.project.ui.theme.Divider
-import org.example.project.ui.theme.TextVerifikasi
+import org.example.project.ui.theme.primary
 import org.example.project.ui.viewmodel.VerifikasiViewModel
 import org.example.project.utils.toReadableString
 import java.time.LocalDate
@@ -48,7 +48,7 @@ fun VerifikasiScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier
@@ -64,7 +64,8 @@ fun VerifikasiScreen(
                     Text(
                         text = "Informasi Kejadian",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
+                        fontSize = 22.sp,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Box(
                         modifier = Modifier
@@ -77,12 +78,12 @@ fun VerifikasiScreen(
                         Icon(
                             imageVector = Icons.Rounded.Close,
                             contentDescription = "Close",
-                            tint = Color.Black,
+                            tint = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.size(25.dp)
                         )
                     }
                 }
-                HorizontalDivider(thickness = 2.dp, color = Divider)
+                HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.secondary)
             }
             Column(
                 modifier = Modifier
@@ -115,7 +116,8 @@ fun VerifikasiScreen(
                         ) {
                             Text(
                                 text = label,
-                                color = TextVerifikasi,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontWeight = FontWeight.Light,
                                 fontSize = textSize,
                                 modifier = Modifier.weight(1f)
                             )
@@ -123,6 +125,7 @@ fun VerifikasiScreen(
                                 text = value,
                                 fontSize = textSize,
                                 fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -130,7 +133,8 @@ fun VerifikasiScreen(
                 }
                 Text(
                     "Deskripsi Kejadian",
-                    color = TextVerifikasi,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Light,
                     fontSize = textSize,
                     modifier = Modifier.padding(vertical = 15.dp)
                 )
@@ -140,8 +144,8 @@ fun VerifikasiScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentHeight()
-                        .border(2.dp, Color.Black, shape = MaterialTheme.shapes.small)
-                        .background(Color.White, shape = MaterialTheme.shapes.small),
+                        .border(2.dp, MaterialTheme.colorScheme.secondary, shape = MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.background, shape = MaterialTheme.shapes.small),
                     colors = TextFieldDefaults.colors(
                         disabledContainerColor = Color.White,
                         disabledTextColor = Color.Black
@@ -151,7 +155,8 @@ fun VerifikasiScreen(
 
                 Text(
                     "Bukti Pendukung",
-                    color = TextVerifikasi,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Light,
                     fontSize = textSize,
                     modifier = Modifier.padding(vertical = 15.dp)
                 )
@@ -192,7 +197,7 @@ fun VerifikasiScreen(
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
-            HorizontalDivider(thickness = 2.dp, color = Divider)
+            HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.secondary)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -207,7 +212,7 @@ fun VerifikasiScreen(
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 10.dp),
-                    contentColor = Color.Red
+                    contentColor = MaterialTheme.colorScheme.error
                 )
                 CustomButton(
                     text = "Terima",
@@ -215,8 +220,8 @@ fun VerifikasiScreen(
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 10.dp),
-                    containerColor = Color.Blue,
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -230,7 +235,7 @@ fun VerifikasiScreen(
             title = "Tolak Laporan",
             message = "Apakah kamu yakin ingin menolak laporan ini?",
             confirmText = "Tolak",
-            confirmButtonColor = Color.Red,
+            confirmButtonColor = MaterialTheme.colorScheme.error,
             onConfirm = {
                 showRejectDialog = false
                 viewModel.updateReportStatus(report?.id!!, StatusLaporan.REJECTED)
@@ -247,7 +252,7 @@ fun VerifikasiScreen(
             title = "Terima Laporan",
             message = "Apakah kamu yakin ingin menerima laporan ini?",
             confirmText = "Terima",
-            confirmButtonColor = Color.Blue,
+            confirmButtonColor = MaterialTheme.colorScheme.primary,
             onConfirm = {
                 showAcceptDialog = false
                 viewModel.updateReportStatus(report?.id!!, StatusLaporan.VERIFIED)

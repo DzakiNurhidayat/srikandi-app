@@ -18,13 +18,22 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
-    
     jvm()
     
     sourceSets {
-        commonMain.dependencies {
-            implementation(libs.kotlin.plugin.serialization)
-            implementation(libs.kotlinx.datetime)
+        val androidMain by getting {
+            dependencies {
+                implementation(libs.ktor.client.okhttp)
+            }
+        }
+
+        val commonMain by getting {
+            dependencies {
+                implementation(libs.kotlin.plugin.serialization)
+                implementation(libs.kotlinx.datetime)
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.content.negotiation)
+            }
         }
     }
 }

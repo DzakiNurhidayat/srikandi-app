@@ -2,7 +2,6 @@ package org.example.project.ui.screens.ketua
 
 import android.R
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -35,12 +34,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.google.firebase.messaging.FirebaseMessaging
 import org.example.project.common.enums.StatusLaporan
 import org.example.project.data.model.Filter
 import org.example.project.model.entities.Report
 import org.example.project.ui.components.CustomButton
 import org.example.project.ui.components.FilterChip
-import org.example.project.ui.theme.Divider
 import org.example.project.ui.viewmodel.ReportViewModel
 import org.example.project.ui.viewmodel.VerifikasiViewModel
 import org.example.project.utils.shadow
@@ -70,8 +69,6 @@ fun DashboardScreen(
         }
     )
 
-
-
     LaunchedEffect(Unit) {
         viewModel.getReports()
     }
@@ -83,6 +80,7 @@ fun DashboardScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .pullRefresh(pullRefreshState)
     ) {
         Column(
@@ -92,7 +90,7 @@ fun DashboardScreen(
         ) {
             HeaderSection()
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(thickness = 2.dp, color = Divider)
+            HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.secondary)
             TotalCase(filteredReports.size)
             FilterKasus(selectedFilter)
         }
@@ -121,13 +119,16 @@ fun HeaderSection() {
     Column(Modifier.padding(30.dp, 40.dp, 30.dp, 10.dp)) {
         Text(text = "Selamat Bertugas,", style = MaterialTheme.typography.bodyMedium)
         Text(
-            text = "Haikal Al Jufri", fontSize = 20.sp, fontWeight = FontWeight.Bold
+            text = "Haikal Al Jufri",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Keberanian kita adalah harapan bagi mereka yang tak bersuara. Mari terus bekerja dengan semangat untuk menciptakan lingkungan yang aman di dunia pendidikan",
             fontSize = 12.sp,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Justify
         )
     }
@@ -146,11 +147,11 @@ fun TotalCase(totalCases: Int) {
                 offsetY = 8.dp,
                 spread = 0.dp
             )
-            .background(Color.White, shape = RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(20.dp))
             .clip(RoundedCornerShape(20.dp))
     ) {
         Spacer(modifier = Modifier.height(70.dp))
-        HorizontalDivider(thickness = 1.dp, color = Color.Black)
+        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onSurface)
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -168,11 +169,15 @@ fun TotalCase(totalCases: Int) {
                     Icon(
                         painter = painterResource(R.drawable.ic_dialog_info),
                         contentDescription = null,
-                        modifier = Modifier.size(15.dp)
+                        modifier = Modifier.size(15.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "$totalCases Total Kasus", fontSize = 15.sp, fontWeight = FontWeight.Bold
+                        text = "$totalCases Total Kasus",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -183,7 +188,7 @@ fun TotalCase(totalCases: Int) {
                 modifier = Modifier
                     .size(55.dp)
                     .padding(horizontal = 15.dp),
-                tint = Color.Black
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -254,11 +259,15 @@ fun CaseCard(
                 spread = 0.dp
             ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Haikal Hariyanto", fontWeight = FontWeight.Bold)
-            Text(text = "Teknik Komputer dan Informatika '23", fontSize = 12.sp, color = Color.Gray)
+            Text(text = "Haikal Hariyanto", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                text = "Teknik Komputer dan Informatika '23",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.height(10.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -271,7 +280,8 @@ fun CaseCard(
                     Icon(
                         painter = painterResource(id = R.drawable.stat_sys_warning),
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
@@ -279,7 +289,8 @@ fun CaseCard(
                         fontSize = 13.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodySmall.copy(lineHeight = TextUnit(16f, TextUnitType.Sp))
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodySmall.copy(lineHeight = TextUnit(16f, TextUnitType.Sp)),
                     )
                 }
                 Row(
@@ -289,7 +300,8 @@ fun CaseCard(
                     Icon(
                         imageVector = Icons.Default.DateRange,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
@@ -297,6 +309,7 @@ fun CaseCard(
                         fontSize = 13.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodySmall.copy(lineHeight = TextUnit(16f, TextUnitType.Sp))
                     )
                 }
@@ -307,7 +320,8 @@ fun CaseCard(
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
@@ -315,6 +329,7 @@ fun CaseCard(
                         fontSize = 13.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodySmall.copy(lineHeight = TextUnit(16f, TextUnitType.Sp))
                     )
                 }

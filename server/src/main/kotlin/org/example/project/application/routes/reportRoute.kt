@@ -7,13 +7,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.example.project.application.dtos.successResponse
 import org.example.project.domain.services.inmemory.ReportService
+import org.example.project.firebase.FirebaseService
+import org.example.project.firebase.NotificationService
 import org.example.project.model.request.ReportRequest
 import org.example.project.model.request.StatusLaporanRequest
 import org.koin.ktor.ext.inject
 
 fun Application.reportRoute() {
     val reportService: ReportService by inject()
-
+    val notificationService: NotificationService by inject()
     routing {
         route("/api") {
             route("/user/reports") {
@@ -64,7 +66,14 @@ fun Application.reportRoute() {
                     val statusRequest = call.receive<StatusLaporanRequest>()
                     val response = reportService.updateStatusLaporan(id, statusRequest)
                     call.respond(HttpStatusCode.OK, successResponse(response, "Status laporan berhasil diupdate"))
+                    try {
+                        val userId = "user123"
+                        notificationService.notifyUserStatusUpdated(userId, statusRequest.statusLaporan)
+                    } catch (e: Exception) {
+                        call.application.log.error("Failed to send notification: ${e.message}")
+                    }
                 }
+
             }
         }
     }
