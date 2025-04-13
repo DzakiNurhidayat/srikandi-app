@@ -11,7 +11,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class EvidenceRepository : BasePairRepository<Evidences, Evidence, Pair<Int, Int>>(Evidences, Pair(Evidences.reportId, Evidences.buktiKe)), IEvidenceRepository {
-    private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
     override suspend fun create(entity: Evidence): Evidence {
         val filePath = entity.filePath ?: throw IllegalArgumentException("File path tidak boleh kosong")

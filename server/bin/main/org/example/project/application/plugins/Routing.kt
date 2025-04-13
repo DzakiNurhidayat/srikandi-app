@@ -13,6 +13,7 @@ import org.example.project.application.routes.uploadRoute
 import org.example.project.application.routes.productRoute
 import org.example.project.application.routes.reportRoute
 import org.example.project.model.Response
+import org.example.project.routes.formSatuRoutes
 import java.io.File
 
 fun Application.configureRouting() {
@@ -45,5 +46,6 @@ fun Application.configureRouting() {
         evidenceRoute()
         uploadRoute()
         reportRoute()
+        formSatuRoutes()
     }
 }

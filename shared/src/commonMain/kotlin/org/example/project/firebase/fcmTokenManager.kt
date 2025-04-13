@@ -25,6 +25,5 @@ object FcmTokenManager {
             println("Failed to register token: ${e.message}")
             e.printStackTrace()
         }
-
     }
 }

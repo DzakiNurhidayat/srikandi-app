@@ -33,6 +33,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import org.example.project.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -134,11 +135,14 @@ fun EditLaporanScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.White
     ) { padding ->
         if (isInitialLoading) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
@@ -149,40 +153,55 @@ fun EditLaporanScreen(
                     .padding(padding)
                     .padding(horizontal = 24.dp)
                     .fillMaxSize()
+                    .background(Color.White)
                     .verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.srikandi),
+                    contentDescription = "Logo Srikandi",
+                    modifier = Modifier
+                        .height(120.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
                 Text(
                     text = "Edit Laporan",
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    color = Color.Black
                 )
                 Spacer(modifier = Modifier.height(36.dp))
 
-                Text("Melapor Sebagai")
+                Text("Melapor Sebagai", color = Color.Black)
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = isKorban,
                         onClick = { isKorban = true }
                     )
-                    Text("Korban")
+                    Text("Korban", color = Color.Black)
                     Spacer(modifier = Modifier.width(12.dp))
                     RadioButton(
                         selected = !isKorban,
                         onClick = { isKorban = false }
                     )
-                    Text("Saksi")
+                    Text("Saksi", color = Color.Black)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = deskripsi,
                     onValueChange = { deskripsi = it },
-                    label = { Text("Deskripsi Kejadian") },
+                    label = { Text("Deskripsi Kejadian", color = Color.Black) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 5,
-                    minLines = 3
+                    minLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -197,26 +216,38 @@ fun EditLaporanScreen(
                     OutlinedTextField(
                         value = tempatKejadian,
                         onValueChange = { tempatKejadian = it },
-                        label = { Text("Lokasi") },
+                        label = { Text("Lokasi", color = Color.Black) },
                         modifier = Modifier.weight(1f),
                         leadingIcon = {
-                            Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
-                        }
+                            Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = Color.Black)
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Color.Black,
+                            unfocusedBorderColor = Color.Gray
+                        )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     OutlinedTextField(
                         value = waktuKejadian,
                         onValueChange = { waktuKejadian = it},
-                        label = { Text("Tanggal") },
+                        label = { Text("Tanggal", color = Color.Black) },
                         modifier = Modifier.weight(1f),
                         leadingIcon = {
-                            Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
-                        }
+                            Icon(imageVector = Icons.Default.DateRange, contentDescription = null, tint = Color.Black)
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Color.Black,
+                            unfocusedBorderColor = Color.Gray
+                        )
                     )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("Bukti Pendukung")
+                Text("Bukti Pendukung", color = Color.Black)
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 // Existing evidence
@@ -224,7 +255,7 @@ fun EditLaporanScreen(
                     Text(
                         "Bukti yang ada:",
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = Color.Black
                     )
                     LazyRow {
                         items(report?.bukti ?: emptyList()) { filePath ->
@@ -240,8 +271,8 @@ fun EditLaporanScreen(
                                     fileExtension in listOf("jpg", "jpeg", "png") -> {
                                         Image(
                                             // Sementara masih assign ip manual, nanti akan disesuaikan kembali
-//                                            painter = rememberAsyncImagePainter("10.0.2.2/${filePath}"),
-                                            painter = rememberAsyncImagePainter("http://192.168.1.9:8080/${filePath}"),
+                                            painter = rememberAsyncImagePainter("10.0.2.2:8080/${filePath}"),
+//                                            painter = rememberAsyncImagePainter("http://192.168.1.9:8080/${filePath}"),
                                             contentDescription = null,
                                             modifier = Modifier.fillMaxSize()
                                         )
@@ -272,7 +303,7 @@ fun EditLaporanScreen(
                 Text(
                     "Tambah bukti baru:",
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    color = Color.Black
                 )
                 LazyRow {
                     items(uploadedFiles) { uri ->
@@ -302,7 +333,12 @@ fun EditLaporanScreen(
                     onClick = { handleSubmit() },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    enabled = !isLoading
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF3F51B5),
+                        contentColor = Color.White,
+                        disabledContainerColor = Color.Gray
+                    )
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
@@ -334,7 +370,7 @@ fun FileEditPreview(
             .padding(end = 8.dp)
             .size(70.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color.LightGray),
+            .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
         IconButton(

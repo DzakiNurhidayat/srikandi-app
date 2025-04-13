@@ -1,6 +1,7 @@
 package org.example.project.ui.screens.user
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,6 +9,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,10 +24,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import org.example.project.common.enums.JenisKekerasan
 import org.example.project.common.enums.StatusLaporan
+import org.example.project.model.request.ReportRequest
 import org.example.project.model.entities.Report
+import org.example.project.ui.components.CustomButton
+import org.example.project.ui.screens.ketua.CaseCard
+import org.example.project.ui.screens.ketua.FilterKasus
+import org.example.project.ui.screens.ketua.HeaderSection
 import org.example.project.ui.screens.ketua.TotalCase
 import org.example.project.ui.viewmodel.ReportViewModel
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -36,6 +47,10 @@ fun UserDashboardScreen(
     val reports by viewModel.reports.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
     val formattedReports = reports.filter { it.statusLaporan != StatusLaporan.DELETED }
+
+    LaunchedEffect(Unit) {
+        viewModel.getReports()
+    }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -50,7 +65,7 @@ fun UserDashboardScreen(
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(
                 thickness = 2.dp,
-                color = MaterialTheme.colorScheme.secondary
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
             )
             TotalCase(formattedReports.size)
             UserFilterTabs(
@@ -144,7 +159,7 @@ fun UserReportCard(
     viewModel: ReportViewModel = hiltViewModel()
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
-    
+
     val formattedDate = remember(report.tanggalKejadian) {
         report.tanggalKejadian.format(DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(Locale("id")))
     }
@@ -220,14 +235,14 @@ fun UserReportCard(
                 )
                 Text(
                     text = formattedDate,
-                    color = Color.Gray,
+                    color = Color.Black,
                     fontSize = 12.sp
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = report.deskripsi,
-                color = Color.Gray,
+                color = Color.Black,
                 fontSize = 14.sp,
                 maxLines = 2
             )
@@ -237,7 +252,7 @@ fun UserReportCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 OutlinedButton(
-                    onClick = { 
+                    onClick = {
                         navController.navigate("edit_laporan/${report.id}")
                     },
                     modifier = Modifier.weight(1f),

@@ -32,6 +32,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
+import org.example.project.R
 import org.example.project.common.enums.JenisKekerasan
 import org.example.project.common.enums.StatusLaporan
 import org.example.project.data.model.NavItem
@@ -118,60 +119,69 @@ fun TambahLaporanScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { BottomNavigationBar(navController) },
+        containerColor = Color.White
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .padding(horizontal = 24.dp)
                 .fillMaxSize()
+                .background(Color.White)
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(24.dp))
             Image(
-                painter = painterResource(id = android.R.drawable.ic_input_add),
-                contentDescription = "Logo",
+                painter = painterResource(id = R.drawable.srikandi),
+                contentDescription = "Logo Srikandi",
                 modifier = Modifier
-                    .height(80.dp)
+                    .height(120.dp)
                     .align(Alignment.CenterHorizontally)
             )
             Text(
                 text = "Pelaporan Kekerasan",
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                color = Color.Black
             )
             Spacer(modifier = Modifier.height(36.dp))
 
-            Text("Melapor Sebagai")
+            Text("Melapor Sebagai", color = Color.Black)
             Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
                     selected = isKorban,
                     onClick = { isKorban = true }
                 )
-                Text("Korban")
+                Text("Korban", color = Color.Black)
                 Spacer(modifier = Modifier.width(12.dp))
                 RadioButton(
                     selected = !isKorban,
                     onClick = { isKorban = false }
                 )
-                Text("Saksi")
+                Text("Saksi", color = Color.Black)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = deskripsi,
                 onValueChange = { deskripsi = it },
-                label = { Text("Deskripsi Kejadian") },
+                label = { Text("Deskripsi Kejadian", color = Color.Black) },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 5,
-                minLines = 3
+                minLines = 3,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedBorderColor = Color.Black,
+                    unfocusedBorderColor = Color.Gray
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
             DropdownMenuBox(
                 selected = selectedJenisKekerasan,
                 onItemSelected = { selectedJenisKekerasan = it },
-                items = jenisList
+                items = jenisList,
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -179,26 +189,38 @@ fun TambahLaporanScreen(
                 OutlinedTextField(
                     value = tempatKejadian,
                     onValueChange = { tempatKejadian = it },
-                    label = { Text("Lokasi") },
+                    label = { Text("Lokasi", color = Color.Black) },
                     modifier = Modifier.weight(1f),
                     leadingIcon = {
-                        Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
-                    }
+                        Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = Color.Black)
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedTextField(
                     value = waktuKejadian,
                     onValueChange = { waktuKejadian = it},
-                    label = { Text("Tanggal") },
+                    label = { Text("Tanggal", color = Color.Black) },
                     modifier = Modifier.weight(1f),
                     leadingIcon = {
-                        Icon(imageVector = Icons.Default.DateRange, contentDescription = null)
-                    }
+                        Icon(imageVector = Icons.Default.DateRange, contentDescription = null, tint = Color.Black)
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Text("Upload Bukti Pendukung")
+            Text("Upload Bukti Pendukung", color = Color.Black)
             Spacer(modifier = Modifier.height(4.dp))
             LazyRow {
                 items(uploadedFiles) { uri ->
@@ -246,7 +268,12 @@ fun TambahLaporanScreen(
                 onClick = { handleSubmit() },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                enabled = !isLoading
+                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF3F51B5),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.Gray
+                )
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -281,7 +308,7 @@ fun DropdownMenuBox(
             value = selected.toReadableString(),
             onValueChange = {},
             readOnly = true,
-            label = { Text("Pilih Jenis Kekerasan") },
+            label = { Text("Pilih Jenis Kekerasan", color = Color.Black) },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
@@ -322,7 +349,7 @@ fun FilePreview(
             .padding(end = 8.dp)
             .size(70.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color.LightGray),
+            .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
         IconButton(
@@ -394,8 +421,9 @@ fun BottomNavigationBar(navController: NavHostController) {
     )
 
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface
+        containerColor = Color.White,
+        contentColor = Color.Black,
+        tonalElevation = 8.dp
     ) {
         items.forEach { item ->
             NavigationBarItem(
@@ -411,21 +439,23 @@ fun BottomNavigationBar(navController: NavHostController) {
                 icon = {
                     Icon(
                         imageVector = item.icon,
-                        contentDescription = item.label
+                        contentDescription = item.label,
+                        tint = if (currentRoute == item.route) Color(0xFF3F51B5) else Color.Gray
                     )
                 },
                 label = {
                     Text(
                         text = item.label,
-                        style = MaterialTheme.typography.labelSmall
+                        color = if (currentRoute == item.route) Color(0xFF3F51B5) else Color.Gray,
+                        fontSize = 12.sp
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                    selectedIconColor = Color(0xFF3F51B5),
+                    unselectedIconColor = Color.Gray,
+                    selectedTextColor = Color(0xFF3F51B5),
+                    unselectedTextColor = Color.Gray,
+                    indicatorColor = Color(0xFF3F51B5).copy(alpha = 0.1f)
                 )
             )
         }

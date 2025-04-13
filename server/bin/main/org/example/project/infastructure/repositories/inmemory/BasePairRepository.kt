@@ -11,6 +11,8 @@ abstract class BasePairRepository<T : Table, E, ID>(
     private val table: T, private val idColumn: Pair<Column<Int>, Column<Int>>
 ) : IEntityRepository<E, ID> {
 
+    protected val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
     protected suspend fun <R> dbQuery(block: () -> R): R = newSuspendedTransaction { block() }
 
     override suspend fun getAll(): List<E> = dbQuery {
@@ -18,7 +20,7 @@ abstract class BasePairRepository<T : Table, E, ID>(
     }
 
     override suspend fun getById(id: ID): E? = dbQuery {
-        val (first, second) = id as Pair<Int, Int> // Casting ID menjadi Pair<Int, Int>
+        val (first, second) = id as Pair<Int, Int>
         table.selectAll().where { (idColumn.first eq first) and (idColumn.second eq second) }
             .mapNotNull { rowToEntity(it) }
             .singleOrNull()
@@ -38,9 +40,12 @@ abstract class BasePairRepository<T : Table, E, ID>(
     protected abstract fun rowToEntity(row: ResultRow): E
 
     fun getCurrentTimestamp(): String {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        return LocalDateTime.now().format(formatter)
+        return LocalDateTime.now().format(dateTimeFormatter)
     }
 
     fun getCurrentTime(): LocalDateTime = LocalDateTime.now()
+
+    fun getCurrentTimeAsString(): String {
+        return LocalDateTime.now().format(dateTimeFormatter)
+    }
 }

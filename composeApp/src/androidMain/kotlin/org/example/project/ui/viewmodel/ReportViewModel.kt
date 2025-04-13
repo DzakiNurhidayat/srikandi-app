@@ -46,16 +46,6 @@ class ReportViewModel @Inject constructor(private val repository: ReportReposito
         }
     }
 
-    fun updateReportStatus(id: Int, status: StatusLaporan) {
-        viewModelScope.launch {
-            try {
-                repository.updateStatus(id, status)
-            } catch (e: Exception) {
-                Log.e("ReportViewModel", "Failed to update report status", e)
-            }
-        }
-    }
-
     suspend fun uploadFilesAndGetPaths(
         context: Context,
         uploadedFiles: List<Uri>
