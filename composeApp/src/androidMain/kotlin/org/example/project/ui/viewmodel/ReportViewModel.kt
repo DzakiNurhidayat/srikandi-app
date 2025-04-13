@@ -16,7 +16,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.example.project.common.enums.StatusLaporan
-import org.example.project.data.repository.ReportRepository
 import org.example.project.model.entities.Report
 import org.example.project.model.request.ReportRequest
 import javax.inject.Inject
@@ -126,7 +125,7 @@ class ReportViewModel @Inject constructor(private val repository: ReportReposito
                 // Refresh reports list after deletion using getUserReports
                 val response = repository.getUserReports()
                 if (response.status) {
-                    reports.value = response.data ?: emptyList()
+                    _reports.value = response.data ?: emptyList()
                 }
             } catch (e: Exception) {
                 Log.e("ReportViewModel", "Failed to delete report", e)

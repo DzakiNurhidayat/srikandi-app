@@ -1,7 +1,6 @@
 package org.example.project.ui.screens.user
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,9 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,19 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import org.example.project.common.enums.JenisKekerasan
 import org.example.project.common.enums.StatusLaporan
-import org.example.project.model.request.ReportRequest
 import org.example.project.model.entities.Report
-import org.example.project.ui.components.CustomButton
-import org.example.project.ui.screens.ketua.CaseCard
-import org.example.project.ui.screens.ketua.FilterKasus
-import org.example.project.ui.screens.ketua.HeaderSection
 import org.example.project.ui.screens.ketua.TotalCase
-import org.example.project.ui.theme.Divider
 import org.example.project.ui.viewmodel.ReportViewModel
-import org.example.project.ui.viewmodel.shared.SharedReportViewModel
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -45,7 +32,6 @@ import java.util.*
 fun UserDashboardScreen(
     navController: NavHostController,
     viewModel: ReportViewModel = hiltViewModel(),
-    sharedViewModel: SharedReportViewModel
 ) {
     val reports by viewModel.reports.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
@@ -64,7 +50,7 @@ fun UserDashboardScreen(
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(
                 thickness = 2.dp,
-                color = Divider
+                color = MaterialTheme.colorScheme.secondary
             )
             TotalCase(formattedReports.size)
             UserFilterTabs(

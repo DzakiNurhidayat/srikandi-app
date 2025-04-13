@@ -24,7 +24,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.launch
-import org.example.project.common.ServerConfig
 import org.example.project.common.enums.JenisKekerasan
 import org.example.project.common.enums.StatusLaporan
 import org.example.project.model.entities.Report
