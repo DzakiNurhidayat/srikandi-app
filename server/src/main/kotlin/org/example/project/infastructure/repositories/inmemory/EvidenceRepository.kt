@@ -13,10 +13,10 @@ import java.time.format.DateTimeFormatter
 class EvidenceRepository : BasePairRepository<Evidences, Evidence, Pair<Int, Int>>(Evidences, Pair(Evidences.reportId, Evidences.buktiKe)), IEvidenceRepository {
 
     override suspend fun create(entity: Evidence): Evidence {
-
         val filePath = entity.filePath ?: throw IllegalArgumentException("File path tidak boleh kosong")
-        val createdAt = entity.createdAt ?: throw IllegalArgumentException("Created at tidak boleh kosong")
-        val updatedAt = entity.updatedAt ?: throw IllegalArgumentException("Updated at tidak boleh kosong")
+        val now = LocalDateTime.now()
+        val createdAt = entity.createdAt ?: now
+        val updatedAt = entity.updatedAt ?: now
 
         newSuspendedTransaction {
             Evidences.insert {

@@ -77,6 +77,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.composeui.tooling.preview)
             implementation(libs.androidx.compose.foundation)
+            implementation(libs.coil)
 
             // Firebase
             implementation(project.dependencies.platform(libs.firebase.bom))

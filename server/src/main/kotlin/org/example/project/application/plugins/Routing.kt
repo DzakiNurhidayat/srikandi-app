@@ -9,10 +9,12 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.example.project.application.dtos.errorResponse
 import org.example.project.application.routes.evidenceRoute
+import org.example.project.application.routes.uploadRoute
 import org.example.project.application.routes.productRoute
 import org.example.project.application.routes.reportRoute
 import org.example.project.model.Response
 import org.example.project.routes.formSatuRoutes
+import java.io.File
 
 fun Application.configureRouting() {
     install(StatusPages) {
@@ -37,9 +39,13 @@ fun Application.configureRouting() {
             call.respondText("Hello World!")
         }
         staticResources("static", "static")
+        static("uploads") {
+            files("uploads")
+        }
         productRoute()
-        reportRoute()
         evidenceRoute()
+        uploadRoute()
+        reportRoute()
         formSatuRoutes()
     }
 }

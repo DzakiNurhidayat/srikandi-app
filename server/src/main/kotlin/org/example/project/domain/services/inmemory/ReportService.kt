@@ -30,11 +30,12 @@ class ReportService(
             throw IllegalArgumentException("Setiap laporan harus memiliki minimal satu bukti")
         }
 
+        val now = JavaLocalDateTime.now()
         // Simpan laporan terlebih dahulu
         val newReport = request.toEntity().copy(
             statusLaporan = StatusLaporan.DRAFT,
-            createdAt = JavaLocalDateTime.now(),
-            updatedAt = JavaLocalDateTime.now()
+            createdAt = now,
+            updatedAt = now
         )
         val savedReport = repository.create(newReport)
 
@@ -43,7 +44,9 @@ class ReportService(
             val newEvidence = Evidence(
                 reportId = savedReport.id!!,
                 buktiKe = index + 1,
-                filePath = filePath
+                filePath = filePath,
+                createdAt = now,
+                updatedAt = now
             )
             evidenceRepository.create(newEvidence)
         }
@@ -92,18 +95,35 @@ class ReportService(
         return true
     }
 
-    override suspend fun getById(id: Int): Report? {
-        val report = super.getById(id) ?: return null
-        val evidences = evidenceRepository.getByReportId(id)
-        return report.copy(bukti = evidences.mapNotNull { it.filePath })
-    }
-
     override suspend fun getAll(): List<Report> {
         val reports = super.getAll()
         return reports.map { report ->
             val evidences = evidenceRepository.getByReportId(report.id!!)
             report.copy(bukti = evidences.mapNotNull { it.filePath })
         }
+    }
+
+    suspend fun getAllForUser(): List<Report> {
+        val reports = super.getAll()
+        return reports
+            .filter { it.statusLaporan != StatusLaporan.DELETED }
+            .map { report ->
+                val evidences = evidenceRepository.getByReportId(report.id!!)
+                report.copy(bukti = evidences.mapNotNull { it.filePath })
+            }
+    }
+
+    override suspend fun getById(id: Int): Report? {
+        val report = super.getById(id) ?: return null
+        val evidences = evidenceRepository.getByReportId(id)
+        return report.copy(bukti = evidences.mapNotNull { it.filePath })
+    }
+
+    suspend fun getByIdForUser(id: Int): Report? {
+        val report = super.getById(id) ?: return null
+        if (report.statusLaporan == StatusLaporan.DELETED) return null
+        val evidences = evidenceRepository.getByReportId(id)
+        return report.copy(bukti = evidences.mapNotNull { it.filePath })
     }
 
     override suspend fun updateStatusLaporan(id: Int, status: StatusLaporanRequest): Boolean {

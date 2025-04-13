@@ -25,29 +25,33 @@ fun Application.reportRoute() {
                     call.respond(HttpStatusCode.Created, successResponse(response, "Laporan berhasil dibuat"))
                 }
                 get {
-                    val response = reportService.getAll()
+                    val response = reportService.getAllForUser()
                     call.respond(HttpStatusCode.OK, successResponse(response, "Berhasil mengambil semua laporan"))
                 }
                 route("/{id}") {
                     get {
-                        val id =
-                            call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
-                        val report = reportService.getById(id)
-                        call.respond(
-                            HttpStatusCode.OK,
-                            successResponse(report, "Berhasil mengambil laporan dengan ID $id")
-                        )
+                        val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
+                        val report = reportService.getByIdForUser(id)
+                        if (report != null) {
+                            call.respond(
+                                HttpStatusCode.OK,
+                                successResponse(report, "Berhasil mengambil laporan dengan ID $id")
+                            )
+                        } else {
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                successResponse(null, "Laporan dengan ID $id tidak ditemukan")
+                            )
+                        }
                     }
                     put {
-                        val id =
-                            call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
+                        val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
                         val reportRequest = call.receive<ReportRequest>()
                         val response = reportService.update(id, reportRequest)
                         call.respond(HttpStatusCode.OK, successResponse(response, "Laporan berhasil diupdate"))
                     }
                     delete {
-                        val id =
-                            call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
+                        val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
                         reportService.delete(id)
                         call.respond(
                             HttpStatusCode.OK,
