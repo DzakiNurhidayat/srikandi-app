@@ -11,6 +11,9 @@ abstract class BaseRepository<T : Table, E, ID>(
     private val table: T, private val idColumn: Column<ID>
 ) : IEntityRepository<E, ID> {
 
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
     protected suspend fun <R> dbQuery(block: () -> R): R = newSuspendedTransaction { block() }
 
     override suspend fun getAll(): List<E> = dbQuery {
@@ -37,4 +40,8 @@ abstract class BaseRepository<T : Table, E, ID>(
     }
 
     fun getCurrentTime(): LocalDateTime = LocalDateTime.now()
+
+    fun getCurrentTimeAsString(): String {
+        return LocalDateTime.now().format(dateTimeFormatter)
+    }
 }

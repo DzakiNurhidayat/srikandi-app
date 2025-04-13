@@ -12,8 +12,6 @@ import java.time.LocalDate as JavaLocalDate
 import java.time.LocalDateTime as JavaLocalDateTime
 
 class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.id), IReportRepository {
-    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
     override suspend fun create(entity: Report): Report {
         val id = dbQuery {
@@ -75,7 +73,5 @@ class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.i
         } > 0
     }
 
-    private fun getCurrentTimeAsString(): String {
-        return JavaLocalDateTime.now().format(dateTimeFormatter)
-    }
+
 }

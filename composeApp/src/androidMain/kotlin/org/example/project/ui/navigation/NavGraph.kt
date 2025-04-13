@@ -2,58 +2,45 @@ package org.example.project.ui.navigation
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.google.firebase.messaging.FirebaseMessaging
 import org.example.project.ui.screens.ProductScreen
-import org.example.project.ui.screens.UnderDevelopmentScreen
 import org.example.project.ui.screens.ketua.DashboardScreen
 import org.example.project.ui.screens.ketua.VerifikasiScreen
-import org.example.project.ui.viewmodel.VerifikasiViewModel
+import org.example.project.ui.screens.ketua.FormSatuScreen
+import org.example.project.ui.viewmodel.shared.SharedReportViewModel
 
 sealed class Screen(val route: String) {
     object ProductList : Screen("product_list")
     object DashboardKetua : Screen("dashboard_ketua")
     object VerifikasiKasus : Screen("verifikasi_kasus")
-    object UnderDev : Screen("under_development")
+    object FormPelaporan : Screen("form_pelaporan") // ⬅ Tambahkan ini
 }
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun navGraph(navController: NavHostController) {
+fun navGraph(navController: NavHostController, sharedReportViewModel: SharedReportViewModel) {
     NavHost(navController, startDestination = Screen.DashboardKetua.route) {
         composable(Screen.ProductList.route) {
             ProductScreen()
         }
         composable(Screen.DashboardKetua.route) {
-            val verifikasiViewModel = hiltViewModel<VerifikasiViewModel>()
-            DashboardScreen(navController, verifikasiViewModel = verifikasiViewModel)
+            DashboardScreen(navController, sharedViewModel = sharedReportViewModel)
         }
         composable(Screen.VerifikasiKasus.route) {
-            val parentEntry = remember(navController) {
-                navController.getBackStackEntry(Screen.DashboardKetua.route)
-            }
-            val verifikasiViewModel = hiltViewModel<VerifikasiViewModel>(parentEntry)
-            VerifikasiScreen(navController, verifikasiViewModel)
+            VerifikasiScreen(navController, sharedViewModel = sharedReportViewModel)
         }
-        composable(Screen.UnderDev.route) {
-            UnderDevelopmentScreen()
-        }
-
-        composable("feature_screen/{featureId}") { backStackEntry ->
-            val featureId = backStackEntry.arguments?.getString("featureId") ?: "Unknown"
-            Text("Feature Screen with ID: $featureId")
-        }
-        composable("notification_screen/{data}") { backStackEntry ->
-            val data = backStackEntry.arguments?.getString("data") ?: "No Data"
-            Text("Notification Data: $data")
+        composable(Screen.FormPelaporan.route) {
+            FormSatuScreen(
+                onNavigateBack = { navController.popBackStack() }, // untuk kembali ke layar sebelumnya
+                onSubmit = { formData ->
+                    // TODO: Simpan data ke ViewModel, database, dsb.
+                    println("Data yang dikirim: $formData")
+                    navController.popBackStack() // setelah submit, kembali ke layar sebelumnya
+                }
+            )
         }
     }
 }
-
