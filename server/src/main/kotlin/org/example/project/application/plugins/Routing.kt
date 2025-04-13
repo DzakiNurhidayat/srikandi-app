@@ -12,6 +12,7 @@ import org.example.project.application.routes.evidenceRoute
 import org.example.project.application.routes.uploadRoute
 import org.example.project.application.routes.productRoute
 import org.example.project.application.routes.reportRoute
+import org.example.project.application.routes.formSatuRoute
 import org.example.project.model.Response
 import org.example.project.routes.formSatuRoutes
 import java.io.File
@@ -43,9 +44,12 @@ fun Application.configureRouting() {
             files("uploads")
         }
         productRoute()
+        reportRoute()
         evidenceRoute()
         uploadRoute()
         reportRoute()
         formSatuRoutes()
+        firebaseRoute()
+        formSatuRoute()
     }
 }
