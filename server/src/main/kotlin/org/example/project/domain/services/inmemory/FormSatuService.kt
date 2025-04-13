@@ -1,8 +1,8 @@
 package org.example.project.domain.services.inmemory
 
 import io.ktor.server.plugins.*
+import org.example.project.application.dtos.FormSatuWithReportDTO
 import org.example.project.common.enums.StatusLaporan
-import org.example.project.domain.entities.FormSatuTable.reportId
 import org.example.project.domain.services.interfaces.IFormSatuService
 import org.example.project.infastructure.repositories.interfaces.IFormSatuRepository
 import org.example.project.infastructure.repositories.interfaces.IReportRepository
@@ -54,9 +54,11 @@ class FormSatuService(
         val reportId = request.reportId
             ?: throw IllegalArgumentException("Report ID tidak boleh null")
 
-        // Validasi apakah reportId masih valid
         val report = reportRepository.getById(reportId)
             ?: throw NotFoundException("Report dengan ID $reportId tidak ditemukan")
+
+        val existingForm = formSatuRepository.getById(id)
+            ?: throw IllegalStateException("FormSatu tidak ditemukan setelah validasi")
 
         val updatedForm = FormSatu(
             id = id.first,
@@ -70,10 +72,36 @@ class FormSatuService(
             alasanPengaduan = request.alasanPengaduan,
             kontakLain = request.kontakLain,
             kebutuhanKorban = request.kebutuhanKorban,
-            createdAt = null, // Tidak diubah, sesuai dengan definisi nullable
+            createdAt = existingForm.createdAt, // Pertahankan createdAt
             updatedAt = LocalDateTime.now()
         )
 
         return formSatuRepository.update(id, updatedForm)
+    }
+
+    // Mengembalikan semua FormSatu dengan Report terkait dalam format nested
+    suspend fun getAllWithReport(): List<FormSatuWithReportDTO> {
+        val forms = formSatuRepository.getAll()
+        return forms.mapNotNull { form ->
+            val report = reportRepository.getById(form.reportId)
+            if (report != null) {
+                FormSatuWithReportDTO(
+                    formSatu = form,
+                    report = report
+                )
+            } else {
+                null // Abaikan FormSatu jika Report tidak ditemukan
+            }
+        }
+    }
+
+    // Mengembalikan FormSatu dengan Report berdasarkan ID dalam format nested
+    suspend fun getByIdWithReport(id: Pair<Int, Int>): FormSatuWithReportDTO? {
+        val form = formSatuRepository.getById(id) ?: return null
+        val report = reportRepository.getById(form.reportId) ?: return null
+        return FormSatuWithReportDTO(
+            formSatu = form,
+            report = report
+        )
     }
 }

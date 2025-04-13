@@ -7,50 +7,64 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.example.project.application.dtos.successResponse
 import org.example.project.domain.services.inmemory.FormSatuService
-import org.example.project.domain.services.inmemory.ReportService
-import org.example.project.domain.services.interfaces.IFormSatuService
 import org.example.project.model.request.FormSatuRequest
-import org.koin.core.logger.Logger
 import org.koin.ktor.ext.inject
 
 fun Application.formSatuRoutes() {
     val formSatuService: FormSatuService by inject()
     routing {
-
         route("/api/ketua/form-1") {
-
-            // GET Semua data form1
+            // GET semua data FormSatu dengan Report
             get {
-                val allForms = formSatuService.getAll()
+                val allFormsWithReport = formSatuService.getAllWithReport()
                 call.respond(HttpStatusCode.OK, successResponse(
-                    allForms,
-                    message = "berhasil mengambil semua data"
+                    allFormsWithReport,
+                    message = "Berhasil mengambil semua data form 1"
                 ))
             }
 
-            // GET form1 berdasarkan form1id dan reportId
+            // GET FormSatu berdasarkan form1id dan reportId
             get("/{form1id}/{reportId}") {
                 val form1id = call.parameters["form1id"]?.toIntOrNull()
                 val reportId = call.parameters["reportId"]?.toIntOrNull()
 
                 if (form1id == null || reportId == null) {
-                    call.respond(HttpStatusCode.BadRequest, "form1id dan reportId harus berupa angka")
+                    call.respond(HttpStatusCode.BadRequest, successResponse(
+                        null,
+                        message = "form1id dan reportId harus berupa angka"
+                    ))
                     return@get
                 }
 
-                val result = formSatuService.getById(Pair(form1id, reportId))
+                val result = formSatuService.getByIdWithReport(Pair(form1id, reportId))
                 if (result == null) {
-                    call.respond(HttpStatusCode.NotFound, "Data Form1 tidak ditemukan")
+                    call.respond(HttpStatusCode.NotFound, successResponse(
+                        null,
+                        message = "Data Form1 tidak ditemukan"
+                    ))
                 } else {
-                    call.respond(HttpStatusCode.OK, result)
+                    call.respond(HttpStatusCode.OK, successResponse(
+                        result,
+                        message = "Berhasil mengambil data form 1"
+                    ))
                 }
             }
 
             // POST buat Form1 baru
             post {
                 val request = call.receive<FormSatuRequest>()
+                if (request.ciriFisik.isBlank() || request.ceritaSingkat.isBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, successResponse(
+                        null,
+                        message = "Ciri fisik dan cerita singkat tidak boleh kosong"
+                    ))
+                    return@post
+                }
                 val savedForm = formSatuService.create(request)
-                call.respond(HttpStatusCode.Created, savedForm)
+                call.respond(HttpStatusCode.Created, successResponse(
+                    savedForm,
+                    message = "Form1 berhasil dibuat"
+                ))
             }
 
             // PUT update Form1
@@ -59,13 +73,26 @@ fun Application.formSatuRoutes() {
                 val reportId = call.parameters["reportId"]?.toIntOrNull()
 
                 if (form1id == null || reportId == null) {
-                    call.respond(HttpStatusCode.BadRequest, "form1id dan reportId harus berupa angka")
+                    call.respond(HttpStatusCode.BadRequest, successResponse(
+                        null,
+                        message = "form1id dan reportId harus berupa angka"
+                    ))
                     return@put
                 }
 
                 val request = call.receive<FormSatuRequest>()
+                if (request.ciriFisik.isBlank() || request.ceritaSingkat.isBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, successResponse(
+                        null,
+                        message = "Ciri fisik dan cerita singkat tidak boleh kosong"
+                    ))
+                    return@put
+                }
                 val updatedForm = formSatuService.update(Pair(form1id, reportId), request)
-                call.respond(HttpStatusCode.OK, updatedForm)
+                call.respond(HttpStatusCode.OK, successResponse(
+                    updatedForm,
+                    message = "Form1 berhasil diperbarui"
+                ))
             }
 
             // DELETE Form1
@@ -74,15 +101,24 @@ fun Application.formSatuRoutes() {
                 val reportId = call.parameters["reportId"]?.toIntOrNull()
 
                 if (form1id == null || reportId == null) {
-                    call.respond(HttpStatusCode.BadRequest, "form1id dan reportId harus berupa angka")
+                    call.respond(HttpStatusCode.BadRequest, successResponse(
+                        null,
+                        message = "form1id dan reportId harus berupa angka"
+                    ))
                     return@delete
                 }
 
                 val deleted = formSatuService.delete(Pair(form1id, reportId))
                 if (deleted) {
-                    call.respond(HttpStatusCode.OK, "Form1 berhasil dihapus")
+                    call.respond(HttpStatusCode.OK, successResponse(
+                        null,
+                        message = "Form1 berhasil dihapus"
+                    ))
                 } else {
-                    call.respond(HttpStatusCode.InternalServerError, "Gagal menghapus Form1")
+                    call.respond(HttpStatusCode.NotFound, successResponse(
+                        null,
+                        message = "Data Form1 tidak ditemukan"
+                    ))
                 }
             }
         }
