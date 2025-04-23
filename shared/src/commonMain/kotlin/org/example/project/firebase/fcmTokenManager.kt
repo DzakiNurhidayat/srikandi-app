@@ -5,7 +5,6 @@ import io.ktor.client.engine.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import org.example.project.common.ServerConfig
 
 expect fun getHttpClientEngine(): HttpClientEngine
 
@@ -16,7 +15,7 @@ object FcmTokenManager {
 
     suspend fun registerToken(userId: String, token: String) {
         try {
-            val response = client.post("http://${ServerConfig.SERVER_ANDROID}:${ServerConfig.SERVER_PORT}/firebase/register-token") {
+            val response = client.post("http://10.0.2.2:8080/firebase/register-token") {
                 contentType(ContentType.Application.FormUrlEncoded)
                 setBody("userId=$userId&token=$token")
             }

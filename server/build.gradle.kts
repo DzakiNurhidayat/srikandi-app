@@ -32,7 +32,6 @@ dependencies {
     implementation(libs.firebase.auth.provider)
     implementation(libs.ktor.server.netty)
     implementation(libs.logback)
-    implementation(libs.ktor.server.config.yaml)
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
 

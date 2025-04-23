@@ -32,6 +32,7 @@ retrofit = "2.11.0"
 okHttp = "4.12.0"
 composeui = "1.7.8"
 coil = "2.4.0"
+snakeyamlEngine = "2.0"
 
 [libraries]
 androidx-hilt-navigation-compose-v120 = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
@@ -66,7 +67,6 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 
 #database
-ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml-jvm", version.ref = "ktor" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 #koin
@@ -104,6 +104,8 @@ firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 google-auth-library-oauth2-http = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "googleAuthLibraryOauth2Http" }
 #coil
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+#yamlshared
+snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeyamlEngine" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

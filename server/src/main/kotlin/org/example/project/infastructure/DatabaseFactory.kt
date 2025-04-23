@@ -2,10 +2,10 @@ package org.example.project.infastructure
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.example.project.common.DatabaseConfig
+import org.example.project.Config
+import org.example.project.domain.entities.Evidences
 import org.example.project.domain.entities.Products
 import org.example.project.domain.entities.Reports
-import org.example.project.domain.entities.Evidences
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -18,10 +18,10 @@ object DatabaseFactory {
     fun init() {
         try {
             val config = HikariConfig().apply {
-                jdbcUrl = DatabaseConfig.DATABASE_URL
-                driverClassName = DatabaseConfig.DATABASE_DRIVER
-                username = DatabaseConfig.DATABASE_USER
-                password = DatabaseConfig.DATABASE_PASSWORD
+                jdbcUrl = Config.databaseUrl
+                driverClassName = Config.databaseDriver
+                username = Config.databaseUsername
+                password = Config.databasePassword
                 maximumPoolSize = 10
                 isAutoCommit = false
                 transactionIsolation = "TRANSACTION_REPEATABLE_READ"
