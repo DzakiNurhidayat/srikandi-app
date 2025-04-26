@@ -4,12 +4,14 @@ import android.R
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
@@ -91,7 +93,7 @@ fun DashboardScreen(
             HeaderSection()
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.secondary)
-            TotalCase(filteredReports.size)
+            TotalCase(filteredReports.size, "Total Kasus")
             FilterKasus(selectedFilter)
         }
 
@@ -116,8 +118,9 @@ fun DashboardScreen(
 
 @Composable
 fun HeaderSection() {
-    Column(Modifier.padding(30.dp, 40.dp, 30.dp, 10.dp)) {
+    Column(Modifier.padding(24.dp, 32.dp, 24.dp, 12.dp)) {
         Text(text = "Selamat Bertugas,", style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(1.dp))
         Text(
             text = "Haikal Al Jufri",
             fontSize = 20.sp,
@@ -135,10 +138,14 @@ fun HeaderSection() {
 }
 
 @Composable
-fun TotalCase(totalCases: Int) {
+fun TotalCase(totalCases: Int, placeholder: String) {
+    var sortMode by remember { mutableStateOf(SortMode.INACTIVE) }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchText by remember { mutableStateOf("") }
+
     Column(
         modifier = Modifier
-            .padding(vertical = 20.dp, horizontal = 30.dp)
+            .padding(vertical = 12.dp, horizontal = 24.dp)
             .shadow(
                 color = Color.Black.copy(alpha = 0.2f),
                 borderRadius = 20.dp,
@@ -150,48 +157,165 @@ fun TotalCase(totalCases: Int) {
             .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(20.dp))
             .clip(RoundedCornerShape(20.dp))
     ) {
-        Spacer(modifier = Modifier.height(70.dp))
+        Spacer(modifier = Modifier.height(80.dp))
         HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.onSurface)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(
+
+        if (isSearchActive) {
+            Row(
                 modifier = Modifier
-                    .wrapContentSize()
-                    .clip(RoundedCornerShape(50.dp))
-                    .padding(horizontal = 15.dp)
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp, horizontal = 15.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                BasicTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(Color.White, shape = RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    textStyle = LocalTextStyle.current.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 15.sp
+                    ),
+                    decorationBox = { innerTextField ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_search_category_default),
+                                contentDescription = "Search Icon",
+                                modifier = Modifier.size(18.dp),
+                                tint = if (searchText.isNotEmpty()) Color.Blue else MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier.weight(1f),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                if (searchText.isEmpty()) {
+                                    Text(
+                                        text = "Cari...",
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                        fontSize = 15.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                            if (searchText.isNotEmpty()) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_menu_close_clear_cancel),
+                                    contentDescription = "Clear Icon",
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable {
+                                            searchText = ""
+                                            isSearchActive = false
+                                        },
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+        } else {
+            // Tampilkan layout awal jika search tidak aktif
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp, horizontal = 15.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Card(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .shadow(
+                            color = Color.Black.copy(alpha = 0.2f),
+                            borderRadius = 20.dp,
+                            blurRadius = 5.dp,
+                            offsetX = 1.dp,
+                            offsetY = 2.dp,
+                            spread = 0.dp
+                        ),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_dialog_info),
+                            contentDescription = "Briefcase Icon",
+                            modifier = Modifier.size(15.dp),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "$totalCases $placeholder",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
                 Row(
-                    verticalAlignment = Alignment.CenterVertically, modifier = Modifier.wrapContentSize()
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_dialog_info),
-                        contentDescription = null,
-                        modifier = Modifier.size(15.dp),
+                        painter = painterResource(
+                            id = when (sortMode) {
+                                SortMode.INACTIVE -> R.drawable.ic_menu_recent_history
+                                SortMode.LATEST -> R.drawable.ic_menu_sort_alphabetically
+                                SortMode.OLDEST -> R.drawable.ic_menu_sort_by_size
+                            }
+                        ),
+                        contentDescription = "Sort Icon",
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(horizontal = 8.dp)
+                            .clickable {
+                                sortMode = when (sortMode) {
+                                    SortMode.INACTIVE -> SortMode.LATEST
+                                    SortMode.LATEST -> SortMode.OLDEST
+                                    SortMode.OLDEST -> SortMode.INACTIVE
+                                }
+                            },
                         tint = MaterialTheme.colorScheme.onSurface
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "$totalCases Total Kasus",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+
+                    VerticalDivider(
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.height(24.dp)
+                    )
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_search_category_default),
+                        contentDescription = "Search Icon",
+                        modifier = Modifier
+                            .size(36.dp)
+                            .padding(horizontal = 8.dp)
+                            .clickable {
+                                isSearchActive = true // Tampilkan kolom pencarian saat diklik
+                            },
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
-
-            Icon(
-                painter = painterResource(id = R.drawable.ic_menu_recent_history),
-                contentDescription = "Time Icon",
-                modifier = Modifier
-                    .size(55.dp)
-                    .padding(horizontal = 15.dp),
-                tint = MaterialTheme.colorScheme.onSurface
-            )
         }
     }
+}
+
+
+enum class SortMode {
+    INACTIVE, // Hanya jam (tidak ada sort)
+    LATEST,   // Sort terakhir dibuat (ascending)
+    OLDEST    // Sort terlama dibuat (descending)
 }
 
 @Composable

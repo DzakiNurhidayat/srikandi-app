@@ -3,10 +3,13 @@ package org.example.project.ui.screens.user
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,22 +21,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import org.example.project.R
 import org.example.project.common.enums.JenisKekerasan
 import org.example.project.common.enums.StatusLaporan
+import org.example.project.data.model.Filter
 import org.example.project.model.request.ReportRequest
 import org.example.project.model.entities.Report
 import org.example.project.ui.components.CustomButton
-import org.example.project.ui.screens.ketua.CaseCard
-import org.example.project.ui.screens.ketua.FilterKasus
-import org.example.project.ui.screens.ketua.HeaderSection
+import org.example.project.ui.components.FilterChip
 import org.example.project.ui.screens.ketua.TotalCase
 import org.example.project.ui.viewmodel.ReportViewModel
+import org.example.project.utils.shadow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -45,8 +52,8 @@ fun UserDashboardScreen(
     viewModel: ReportViewModel = hiltViewModel(),
 ) {
     val reports by viewModel.reports.collectAsState()
-    var selectedTab by remember { mutableStateOf(0) }
     val formattedReports = reports.filter { it.statusLaporan != StatusLaporan.DELETED }
+    val selectedFilter = remember { mutableStateOf("Laporan") }
 
     LaunchedEffect(Unit) {
         viewModel.getReports()
@@ -67,21 +74,34 @@ fun UserDashboardScreen(
                 thickness = 2.dp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
             )
-            TotalCase(formattedReports.size)
+            TotalCase(formattedReports.size, "Laporan Terkirim")
             UserFilterTabs(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
+                selectedFilter = selectedFilter,
+                modifier = Modifier.fillMaxWidth(),
             )
 
-            if (selectedTab == 0) {
-                LazyColumn {
-                    items(formattedReports) { report ->
-                        UserReportCard(
-                            navController = navController,
-                            report = report,
-                            viewModel = viewModel
-                        )
+            when (selectedFilter.value) {
+                "Laporan" -> {
+                    LazyColumn {
+                        items(formattedReports) { report ->
+                            UserReportCard(
+                                navController = navController,
+                                report = report,
+                                viewModel = viewModel
+                            )
+                        }
                     }
+                }
+                "Undangan" -> {
+                    // Placeholder untuk daftar undangan
+                    Text(
+                        text = "Daftar undangan belum tersedia",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
         }
@@ -90,64 +110,56 @@ fun UserDashboardScreen(
 
 @Composable
 fun HeaderUserSection() {
-    Column(Modifier.padding(30.dp, 40.dp, 30.dp, 10.dp)) {
+    Column(Modifier.padding(24.dp, 32.dp, 24.dp, 12.dp)) {
         Text(text = "Selamat Pagi,", style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = "Restu Akbar", fontSize = 20.sp, fontWeight = FontWeight.Bold
+            text = "Restu Akbar",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Setiap suara memiliki kekuatan. Jangan takut untuk berbicara dan mencari bantuan.",
             fontSize = 12.sp,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Justify
         )
     }
 }
 
 @Composable
-fun UserFilterTabs(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 30.dp, vertical = 10.dp)
-    ) {
-        TabItem(
-            title = "Laporan",
-            isSelected = selectedTab == 0,
-            onClick = { onTabSelected(0) },
-            modifier = Modifier.weight(1f)
-        )
-        TabItem(
-            title = "Undangan",
-            isSelected = selectedTab == 1,
-            onClick = { onTabSelected(1) },
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-fun TabItem(
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+fun UserFilterTabs(
+    selectedFilter: MutableState<String>,
+    modifier: Modifier = Modifier,
+    chipWidth: Dp = 120.dp,
+    chipHeight: Dp = 32.dp
 ) {
-    Box(
+    val filters = listOf("Laporan", "Undangan")
+    LazyRow(
         modifier = modifier
-            .padding(horizontal = 4.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        contentAlignment = Alignment.Center
+            .padding(vertical = 4.dp, horizontal = 24.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(
-            text = title,
-            color = if (isSelected) Color.White else Color.Gray,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
+        items(filters) { filter ->
+            val isSelected = selectedFilter.value == filter
+            FilterChip(
+                filter = Filter(
+                    name = filter,
+                    enabled = mutableStateOf(isSelected)
+                ),
+                onSelected = {
+                    selectedFilter.value = filter
+                },
+                modifier = Modifier
+                    .width(chipWidth)
+                    .height(chipHeight)
+                    .padding(end = 5.dp),
+                shape = RoundedCornerShape(20),
+            )
+        }
     }
 }
 
@@ -177,7 +189,8 @@ fun UserReportCard(
             text = {
                 Text(
                     text = "Apakah Anda yakin ingin menghapus laporan ini?",
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Justify,
                 )
             },
             confirmButton = {
@@ -212,10 +225,17 @@ fun UserReportCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 30.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(horizontal = 24.dp, vertical = 8.dp)
+            .shadow(
+                color = Color.Black.copy(alpha = 0.2f),
+                borderRadius = 20.dp,
+                blurRadius = 15.dp,
+                offsetX = 2.dp,
+                offsetY = 8.dp,
+                spread = 0.dp
+            ),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -224,49 +244,99 @@ fun UserReportCard(
                     navController.navigate("edit_laporan/${report.id}")
                 }
         ) {
+            // Row: Image and Text (Name + Department/Date)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "Restu Akbar",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                Image(
+                    painter = painterResource(id = R.drawable.laporan),
+                    contentDescription = "Laporan",
+                    modifier = Modifier
+                        .height(60.dp)
+                        .width(60.dp)
                 )
-                Text(
-                    text = formattedDate,
-                    color = Color.Black,
-                    fontSize = 12.sp
-                )
+                Column {
+                    // Row 1: Name
+                    Text(
+                        text = "Restu Akbar",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(1.dp))
+                    // Row 2: Department and Date
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Teknik Komputer dan Informatika ‘23",
+                            color = Color.Gray,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                        Text(
+                            text = formattedDate,
+                            color = Color.Gray,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
+            // Divider
+            HorizontalDivider(
+                color = Color.Gray.copy(alpha = 0.2f),
+                thickness = 1.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            // Description
             Text(
                 text = report.deskripsi,
                 color = Color.Black,
                 fontSize = 14.sp,
-                maxLines = 2
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            // Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
                     onClick = {
                         navController.navigate("edit_laporan/${report.id}")
                     },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier
+                        .weight(1f),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.Gray),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
                 ) {
-                    Text("Edit Laporan", color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = "Edit Laporan",
+                        color = Color(0xFF666666),
+                        fontSize = 14.sp
+                    )
                 }
-                Spacer(modifier = Modifier.width(4.dp))
                 OutlinedButton(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(4.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.Red),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
                 ) {
-                    Text("Hapus Laporan", color = Color.Red)
+                    Text(
+                        text = "Hapus Laporan",
+                        color = Color.Red,
+                        fontSize = 14.sp
+                    )
                 }
             }
         }
