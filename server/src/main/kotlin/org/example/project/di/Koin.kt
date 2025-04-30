@@ -1,5 +1,9 @@
 package org.example.project.di
 
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import org.example.project.domain.services.inmemory.EvidenceService
 import org.example.project.domain.services.inmemory.FormSatuService
@@ -20,10 +24,26 @@ import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
+val firebaseModule = module {
+    single { FirebaseRepository() }
+    single { FirebaseService(get()) }
+    single { NotificationService(get(), get(), get()) }
+}
+
 fun Application.configureDI() {
+    val appModule = module {
+        single<Application> { this@configureDI }
+        single {
+            HttpClient(CIO) {
+                install(ContentNegotiation) {
+                    json()
+                }
+            }
+        }
+    }
     install(Koin) {
         slf4jLogger()
-        modules(productModule, reportModule, formSatuModule, firebaseModule)
+        modules(productModule, reportModule, formSatuModule, firebaseModule, appModule)
     }
 }
 
@@ -41,12 +61,6 @@ val reportModule = module {
 
 val formSatuModule = module {
     single<IFormSatuRepository> { FormSatuRepository() }
-    single<IReportRepository> { ReportRepository() }
     single { FormSatuService(get(), get()) }
 }
 
-val firebaseModule = module {
-    single { NotificationService(get()) }
-    single { FirebaseService(get()) }
-    single { FirebaseRepository() }
-}

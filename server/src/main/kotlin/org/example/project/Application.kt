@@ -1,25 +1,30 @@
 package org.example.project
 
 import io.ktor.server.application.*
-import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import org.example.project.application.plugins.configureRouting
 import org.example.project.application.plugins.configureSerialization
 import org.example.project.di.configureDI
 import org.example.project.infastructure.DatabaseFactory
+import org.slf4j.LoggerFactory
 
-fun main() {
-    embeddedServer(
-        Netty,
-        port = Config.serverPort,
-        host = Config.serverHost
-    ) {
-        module()
-    }.start(wait = true)
+fun main(args: Array<String>) {
+    EngineMain.main(args)
 }
+
 fun Application.module() {
-    DatabaseFactory.init()
-    configureDI()
-    configureSerialization()
-    configureRouting()
+    val environmentName = environment.config.propertyOrNull("server")?.getString() ?: "unknown"
+    val logger = LoggerFactory.getLogger("Application")
+
+    logger.info("Starting application in $environmentName environment")
+
+    try {
+        DatabaseFactory.init(environment.config)
+        configureDI()
+        configureSerialization()
+        configureRouting()
+    } catch (e: Exception) {
+        logger.error("Failed to initialize application: ${e.message}", e)
+        throw e
+    }
 }

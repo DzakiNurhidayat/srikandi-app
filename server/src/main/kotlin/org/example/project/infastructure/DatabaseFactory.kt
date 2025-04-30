@@ -2,7 +2,7 @@ package org.example.project.infastructure
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.example.project.Config
+import io.ktor.server.config.*
 import org.example.project.domain.entities.Evidences
 import org.example.project.domain.entities.Products
 import org.example.project.domain.entities.Reports
@@ -15,13 +15,13 @@ object DatabaseFactory {
     private lateinit var dataSource: HikariDataSource
     private val logger = LoggerFactory.getLogger(DatabaseFactory::class.java)
 
-    fun init() {
+    fun init(config: ApplicationConfig) {
         try {
             val config = HikariConfig().apply {
-                jdbcUrl = Config.databaseUrl
-                driverClassName = Config.databaseDriver
-                username = Config.databaseUsername
-                password = Config.databasePassword
+                jdbcUrl = config.propertyOrNull("database.url")?.getString()
+                driverClassName = config.propertyOrNull("database.driver")?.getString()
+                username = config.propertyOrNull("database.username")?.getString()
+                password = config.propertyOrNull("database.password")?.getString()
                 maximumPoolSize = 10
                 isAutoCommit = false
                 transactionIsolation = "TRANSACTION_REPEATABLE_READ"

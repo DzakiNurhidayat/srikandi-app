@@ -10,7 +10,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.jvm.javaio.*
-import org.example.project.Config
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.example.project.application.dtos.errorResponse
 import org.example.project.application.dtos.successResponse
 import org.example.project.application.routes.idParam
@@ -47,13 +49,17 @@ fun Application.configureRouting() {
             call.respond(HttpStatusCode.NotFound, errorResponse(cause.message ?: "Data tidak ditemukan"))
         }
     }
+    val reportService: ReportService by inject()
+    val notificationService: NotificationService by inject()
+    val formSatuService: FormSatuService by inject()
+    val evidenceService: EvidenceService by inject()
+    val firebaseService: FirebaseService by inject()
+
     routing {
         //endpoint aplikasi (/api)
-        route(Config.apiEndpoint) {
+        route("/api") {
             //endpoint api report
             route("/reports") {
-                val reportService: ReportService by inject()
-                val notificationService: NotificationService by inject()
                 //report user
                 route("/user") {
                     get {
@@ -141,7 +147,6 @@ fun Application.configureRouting() {
 
                 //report ketua
                 route("/ketua") {
-                    val formSatuService: FormSatuService by inject()
                     get {
                         val response = reportService.getAll()
                         call.respond(HttpStatusCode.OK, successResponse(response, "Berhasil mengambil semua laporan"))
@@ -175,7 +180,9 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.OK, successResponse(response, "Status laporan berhasil diupdate"))
                     try {
                         val userId = "user123"
-                        notificationService.notifyUserStatusUpdated(userId, statusRequest.statusLaporan)
+                        withContext(Dispatchers.IO) {
+                            notificationService.notifyUserStatusUpdated(userId, statusRequest.statusLaporan)
+                        }
                     } catch (e: Exception) {
                         call.application.log.error("Failed to send notification: ${e.message}")
                     }
@@ -184,7 +191,6 @@ fun Application.configureRouting() {
 
             // report bukti
             route("/evidences") {
-                val evidenceService: EvidenceService by inject()
                 post("/{reportId}") {
                     val reportId = call.parameters["reportId"]?.toIntOrNull()
                         ?: throw IllegalArgumentException("Report ID tidak valid")
@@ -221,7 +227,6 @@ fun Application.configureRouting() {
         }
 
         route("/firebase") {
-            val firebaseService: FirebaseService by inject()
             post("/register-token") {
                 val params = call.receiveParameters()
                 val userId = params["userId"] ?: return@post call.respondText(

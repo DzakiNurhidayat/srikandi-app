@@ -6,13 +6,18 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import org.example.project.common.enums.StatusLaporan
 
 
-class NotificationService(private val firebaseService: FirebaseService ) {
+class NotificationService(
+    private val firebaseService: FirebaseService,
+    private val application: Application,
+    private val client: HttpClient
+) {
     suspend fun notifyUserStatusUpdated(userId: String, statusLaporan: StatusLaporan) {
         val isUser = userId == "user123"
         val token = firebaseService.getToken(userId)
@@ -21,8 +26,7 @@ class NotificationService(private val firebaseService: FirebaseService ) {
         sendFcmNotification(token, title, message)
     }
 
-
-    suspend fun notifyCustom(userId: String, title: String, message: String) {
+    suspend fun notifyCustom(userId: String, title: String, message: String, application: Application) {
         val token = firebaseService.getToken(userId)
         sendFcmNotification(token, title, message)
     }
@@ -33,13 +37,7 @@ class NotificationService(private val firebaseService: FirebaseService ) {
         body: String,
         customData: Map<String, String> = emptyMap()
     ) {
-        val client = HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json()
-            }
-        }
-
-        val accessToken = getAccessToken()
+        val accessToken = application.getAccessToken()
         val projectId = "srikandi-app"
 
         val message = buildJsonObject {

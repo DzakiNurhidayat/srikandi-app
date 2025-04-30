@@ -8,7 +8,7 @@ group = "com.example.project"
 version = "1.0.0"
 
 application {
-    mainClass.set("org.example.project.ApplicationKt")
+    mainClass = "io.ktor.server.netty.EngineMain"
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "true"}")
 }
 
@@ -34,6 +34,7 @@ dependencies {
     implementation(libs.logback)
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
+    implementation(libs.ktor.server.config.yaml)
 
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
