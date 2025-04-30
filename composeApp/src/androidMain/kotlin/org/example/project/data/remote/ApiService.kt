@@ -13,38 +13,35 @@ interface ApiService {
     suspend fun getProducts(): Response<List<Product>>
 
     // REPORT
-    @GET("api/ketua/reports")
+    @GET("api/reports/ketua")
     suspend fun getReports(): Response<List<Report>>
 
-    @GET("api/user/reports")
+    @GET("api/reports/user")
     suspend fun getUserReports(): Response<List<Report>>
 
-    @POST("api/user/reports")
+    @POST("api/reports/user")
     suspend fun createReport(
         @Body reportRequest: ReportRequest
     ): Response<Report>
 
     @Multipart
-    @POST("api/reports/upload-evidence")
+    @POST("api/reports/user/upload-evidence")
     suspend fun uploadEvidence(
         @Part files: List<MultipartBody.Part>
     ): Response<List<String>>
 
-    @PATCH("api/ketua/reports/{id}")
+    @PATCH("api/reports/{id}")
     suspend fun updateStatus(
         @Path("id") id: Int,
         @Body statusRequest: StatusLaporanRequest
     ): Response<Boolean>
 
-    @GET("api/user/reports/{id}")
+    @GET("api/reports/user/{id}")
     suspend fun getReportById(@Path("id") id: Int): Response<Report>
 
-    @PUT("api/user/reports/{id}")
+    @PUT("api/reports/user/{id}")
     suspend fun updateReport(
         @Path("id") id: Int,
         @Body reportRequest: ReportRequest
     ): Response<Report>
-
-    @DELETE("api/user/reports/{id}")
-    suspend fun deleteReport(@Path("id") id: Int): Response<Unit>
 }

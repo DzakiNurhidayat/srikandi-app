@@ -23,7 +23,7 @@ import org.koin.logger.slf4jLogger
 fun Application.configureDI() {
     install(Koin) {
         slf4jLogger()
-        modules(productModule, reportModule, formSatuModule, firebaseModule) // Tambahkan formSatuModule
+        modules(productModule, reportModule, formSatuModule, firebaseModule)
     }
 }
 

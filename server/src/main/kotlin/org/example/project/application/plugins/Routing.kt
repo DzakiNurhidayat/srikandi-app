@@ -13,12 +13,16 @@ import io.ktor.utils.io.jvm.javaio.*
 import org.example.project.Config
 import org.example.project.application.dtos.errorResponse
 import org.example.project.application.dtos.successResponse
-import org.example.project.application.routes.*
+import org.example.project.application.routes.idParam
+import org.example.project.application.routes.productRoute
 import org.example.project.domain.services.inmemory.EvidenceService
+import org.example.project.domain.services.inmemory.FormSatuService
 import org.example.project.domain.services.inmemory.ReportService
+import org.example.project.firebase.FirebaseService
 import org.example.project.firebase.NotificationService
 import org.example.project.model.Response
 import org.example.project.model.request.EvidenceRequest
+import org.example.project.model.request.FormSatuRequest
 import org.example.project.model.request.ReportRequest
 import org.example.project.model.request.StatusLaporanRequest
 import org.koin.ktor.ext.inject
@@ -44,28 +48,26 @@ fun Application.configureRouting() {
         }
     }
     routing {
-        //endpoint aplikasi
+        //endpoint aplikasi (/api)
         route(Config.apiEndpoint) {
-
             //endpoint api report
             route("/reports") {
-            val reportService: ReportService by inject()
-            val notificationService: NotificationService by inject()
+                val reportService: ReportService by inject()
+                val notificationService: NotificationService by inject()
                 //report user
                 route("/user") {
+                    get {
+                        val response = reportService.getAllForUser()
+                        call.respond(HttpStatusCode.OK, successResponse(response, "Berhasil mengambil semua laporan"))
+                    }
                     post {
                         val reportRequest = call.receive<ReportRequest>()
                         val response = reportService.create(reportRequest)
                         call.respond(HttpStatusCode.Created, successResponse(response, "Laporan berhasil dibuat"))
                     }
-                    get {
-                        val response = reportService.getAllForUser()
-                        call.respond(HttpStatusCode.OK, successResponse(response, "Berhasil mengambil semua laporan"))
-                    }
                     route("/{id}") {
                         get {
-                            val id =
-                                call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
+                            val id = call.idParam()
                             val report = reportService.getByIdForUser(id)
                             if (report != null) {
                                 call.respond(
@@ -80,20 +82,10 @@ fun Application.configureRouting() {
                             }
                         }
                         put {
-                            val id =
-                                call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
+                            val id = call.idParam()
                             val reportRequest = call.receive<ReportRequest>()
                             val response = reportService.update(id, reportRequest)
                             call.respond(HttpStatusCode.OK, successResponse(response, "Laporan berhasil diupdate"))
-                        }
-                        delete {
-                            val id =
-                                call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
-                            reportService.delete(id)
-                            call.respond(
-                                HttpStatusCode.OK,
-                                successResponse(null, "Berhasil menghapus laporan dengan ID $id")
-                            )
                         }
                     }
                     post("/upload-evidence") {
@@ -132,7 +124,7 @@ fun Application.configureRouting() {
                             }
 
                             call.respond(
-                                HttpStatusCode.OK,
+                                HttpStatusCode.NoContent,
                                 successResponse(filePaths, "File berhasil diunggah")
                             )
                         } catch (e: Exception) {
@@ -142,25 +134,50 @@ fun Application.configureRouting() {
                             )
                         }
                     }
+                    patch("/call") {
+                        //todo (implementasi penentuan pemanggilan oleh user)
+                    }
                 }
+
                 //report ketua
                 route("/ketua") {
+                    val formSatuService: FormSatuService by inject()
                     get {
                         val response = reportService.getAll()
                         call.respond(HttpStatusCode.OK, successResponse(response, "Berhasil mengambil semua laporan"))
                     }
-                    patch("{id}") {
-                        val id =
-                            call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
-                        val statusRequest = call.receive<StatusLaporanRequest>()
-                        val response = reportService.updateStatusLaporan(id, statusRequest)
-                        call.respond(HttpStatusCode.OK, successResponse(response, "Status laporan berhasil diupdate"))
-                        try {
-                            val userId = "user123"
-                            notificationService.notifyUserStatusUpdated(userId, statusRequest.statusLaporan)
-                        } catch (e: Exception) {
-                            call.application.log.error("Failed to send notification: ${e.message}")
+                    // POST buat Form1 baru
+                    post {
+                        val request = call.receive<FormSatuRequest>()
+                        if (request.ciriFisik.isBlank() || request.ceritaSingkat.isBlank()) {
+                            call.respond(
+                                HttpStatusCode.BadRequest, successResponse(
+                                    null,
+                                    message = "Ciri fisik dan cerita singkat tidak boleh kosong"
+                                )
+                            )
+                            return@post
                         }
+                        val savedForm = formSatuService.create(request)
+                        call.respond(
+                            HttpStatusCode.Created, successResponse(
+                                savedForm,
+                                message = "Form1 berhasil dibuat"
+                            )
+                        )
+                    }
+                }
+
+                patch("{id}") {
+                    val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
+                    val statusRequest = call.receive<StatusLaporanRequest>()
+                    val response = reportService.updateStatusLaporan(id, statusRequest)
+                    call.respond(HttpStatusCode.OK, successResponse(response, "Status laporan berhasil diupdate"))
+                    try {
+                        val userId = "user123"
+                        notificationService.notifyUserStatusUpdated(userId, statusRequest.statusLaporan)
+                    } catch (e: Exception) {
+                        call.application.log.error("Failed to send notification: ${e.message}")
                     }
                 }
             }
@@ -175,30 +192,6 @@ fun Application.configureRouting() {
                     val evidenceRequest = call.receive<EvidenceRequest>()
                     val response = evidenceService.create(evidenceRequest.copy(reportId = reportId))
                     call.respond(HttpStatusCode.Created, successResponse(response, "Bukti berhasil ditambahkan"))
-                }
-
-                get("/{reportId}") {
-                    val reportId = call.parameters["reportId"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("Report ID tidak valid")
-
-                    val response = evidenceService.getByReportId(reportId)
-                    call.respond(
-                        HttpStatusCode.OK,
-                        successResponse(response, "Berhasil mengambil bukti untuk laporan dengan ID $reportId")
-                    )
-                }
-
-                get("/{reportId}/{buktiKe}") {
-                    val reportId = call.parameters["reportId"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("Report ID tidak valid")
-                    val buktiKe = call.parameters["buktiKe"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("BuktiKe tidak valid")
-
-                    val evidence = evidenceService.getById(Pair(reportId, buktiKe))
-                    call.respond(
-                        HttpStatusCode.OK,
-                        successResponse(evidence, "Berhasil mengambil bukti ke-$buktiKe untuk laporan ID $reportId")
-                    )
                 }
 
                 put("/{reportId}/{buktiKe}") {
@@ -226,13 +219,32 @@ fun Application.configureRouting() {
                 }
             }
         }
-        staticResources("static", "static")
-        static("uploads") {
-            files("uploads")
+
+        route("/firebase") {
+            val firebaseService: FirebaseService by inject()
+            post("/register-token") {
+                val params = call.receiveParameters()
+                val userId = params["userId"] ?: return@post call.respondText(
+                    "userId required",
+                    status = HttpStatusCode.BadRequest
+                )
+                val token = params["token"] ?: return@post call.respondText(
+                    "token required",
+                    status = HttpStatusCode.BadRequest
+                )
+                try {
+                    firebaseService.saveToken(userId, token)
+                    call.respondText("Token registered")
+                } catch (e: Exception) {
+                    call.respondText(
+                        "Failed to register token: ${e.message}",
+                        status = HttpStatusCode.InternalServerError
+                    )
+                }
+            }
         }
-        productRoute()
-        uploadRoute()
-        firebaseRoute()
-        formSatuRoute()
+        staticResources("/static", "static")
+        staticFiles("/uploads", File("uploads"))
     }
+    productRoute()
 }
