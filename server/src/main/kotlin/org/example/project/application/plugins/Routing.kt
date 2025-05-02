@@ -1,5 +1,6 @@
 package org.example.project.application.plugins
 
+import com.google.firebase.auth.FirebaseAuth
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -11,7 +12,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.example.project.application.dtos.errorResponse
 import org.example.project.application.dtos.successResponse
@@ -23,10 +23,7 @@ import org.example.project.domain.services.inmemory.ReportService
 import org.example.project.firebase.FirebaseService
 import org.example.project.firebase.NotificationService
 import org.example.project.model.Response
-import org.example.project.model.request.EvidenceRequest
-import org.example.project.model.request.FormSatuRequest
-import org.example.project.model.request.ReportRequest
-import org.example.project.model.request.StatusLaporanRequest
+import org.example.project.model.request.*
 import org.koin.ktor.ext.inject
 import java.io.File
 import java.util.*
@@ -246,6 +243,29 @@ fun Application.configureRouting() {
                         status = HttpStatusCode.InternalServerError
                     )
                 }
+            }
+            post("/login") {
+                val request = call.receive<LoginRequest>()
+                val idToken = request.idToken
+
+                val decodedToken = try {
+                    FirebaseAuth.getInstance().verifyIdToken(idToken)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.Unauthorized, "Invalid Firebase ID token")
+                    return@post
+                }
+
+                val email = decodedToken.email ?: run {
+                    call.respond(HttpStatusCode.Unauthorized, "Email not found")
+                    return@post
+                }
+
+                if (!email.endsWith("@polban.ac.id")) {
+                    call.respond(HttpStatusCode.Forbidden, "Hanya email dengan domain @polban.ac.id yang diizinkan")
+                    return@post
+                }
+
+                call.respond(HttpStatusCode.OK, successResponse(null, "Login successful"))
             }
         }
         staticResources("/static", "static")

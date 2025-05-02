@@ -13,6 +13,7 @@ androidx-material = "1.12.0"
 androidx-test-junit = "1.2.1"
 compose-multiplatform = "1.7.0"
 firebase = "33.12.0"
+firebaseAdmin = "9.2.0"
 googleAuthLibraryOauth2Http = "1.33.1"
 hiltNavigationCompose = "1.2.0"
 junit = "4.13.2"
@@ -22,7 +23,6 @@ ktor = "3.1.1"
 logback = "1.5.16"
 postgresql = "42.7.2"
 h2 = "2.2.224"
-firebase-auth = "1.5.0"
 koin = "4.0.0"
 hilt = "2.51.1"
 exposed = "0.60.0"
@@ -59,7 +59,6 @@ ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negoti
 ktor-server-host-common = { module = "io.ktor:ktor-server-host-common-jvm", version.ref = "ktor" }
 ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages-jvm", version.ref = "ktor" }
 ktor-server-auth = { module = "io.ktor:ktor-server-auth-jvm", version.ref = "ktor" }
-firebase-auth-provider = { module = "com.kborowy:firebase-auth-provider", version.ref = "firebase-auth" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -101,6 +100,7 @@ composeui-material3 = { module = "androidx.compose.material3:material3", version
 #firebase
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebaseAdmin" }
 google-auth-library-oauth2-http = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "googleAuthLibraryOauth2Http" }
 #coil
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
