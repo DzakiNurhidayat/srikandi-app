@@ -3,6 +3,7 @@ package org.example.project
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -25,10 +26,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         fetchFcmToken()
+
         setContent {
             navController = rememberNavController()
-            handleNotificationIntent(intent, navController)
             SrikandiAppTheme {
+                // NavGraph akan menentukan startDestination (onboarding atau dashboard)
                 navGraph(navController)
             }
         }
@@ -46,9 +48,10 @@ class MainActivity : ComponentActivity() {
                 val token = task.result
                 println("FCM Token: $token")
                 CoroutineScope(Dispatchers.IO).launch {
-                    sendTokenToServer("user123", token)}
+                    sendTokenToServer("user123", token)
+                }
             } else {
-                println("Failed to fetch FCM Token: ${task.exception?.message}")
+                println("Gagal mengambil FCM Token: ${task.exception?.message}")
             }
         }
     }
@@ -65,7 +68,7 @@ class MainActivity : ComponentActivity() {
             when {
                 action == "open_feature" && featureId != null -> {
                     navController.navigate("feature_screen/$featureId") {
-                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        popUpTo(0) { inclusive = false }
                     }
                 }
                 notificationData != null -> {
