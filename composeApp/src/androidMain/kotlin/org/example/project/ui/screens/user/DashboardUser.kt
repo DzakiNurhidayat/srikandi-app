@@ -1,7 +1,6 @@
 package org.example.project.ui.screens.user
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -12,14 +11,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,19 +24,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
 import org.example.project.R
-import org.example.project.common.enums.JenisKekerasan
 import org.example.project.common.enums.StatusLaporan
 import org.example.project.data.model.Filter
-import org.example.project.model.request.ReportRequest
 import org.example.project.model.entities.Report
-import org.example.project.ui.components.CustomButton
 import org.example.project.ui.components.FilterChip
 import org.example.project.ui.screens.ketua.TotalCase
 import org.example.project.ui.viewmodel.ReportViewModel
 import org.example.project.utils.shadow
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -50,6 +43,7 @@ import java.util.*
 fun UserDashboardScreen(
     navController: NavHostController,
     viewModel: ReportViewModel = hiltViewModel(),
+
 ) {
     val reports by viewModel.reports.collectAsState()
     val formattedReports = reports.filter { it.statusLaporan != StatusLaporan.DELETED }
@@ -196,8 +190,18 @@ fun UserReportCard(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deleteReport(report.id!!)
-                        showDeleteDialog = false
+                        navController.currentBackStackEntry?.let { entry ->
+                            entry.lifecycleScope.launch {
+                                try {
+                                    report.id?.let {
+                                        viewModel.updateReport(it, StatusLaporan.DELETED)
+                                    }
+                                    showDeleteDialog = false
+                                } catch (e: Exception) {
+                                    showDeleteDialog = false
+                                }
+                            }
+                        }
                     }
                 ) {
                     Text(
@@ -251,7 +255,7 @@ fun UserReportCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.laporan),
+                    painter = painterResource(id = R.drawable.satgas_ppkpt),
                     contentDescription = "Laporan",
                     modifier = Modifier
                         .height(60.dp)

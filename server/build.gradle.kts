@@ -50,7 +50,7 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.google.auth.library.oauth2.http)
     implementation(libs.firebase.admin)
-    implementation("io.ktor:ktor-server-cors:3.1.1")
+    implementation(libs.ktor.server.cors)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)

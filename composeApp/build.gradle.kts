@@ -78,10 +78,18 @@ kotlin {
             implementation(libs.composeui.tooling.preview)
             implementation(libs.androidx.compose.foundation)
             implementation(libs.coil)
+            implementation(libs.androidx.activity.ktx)
 
             // Firebase
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.messaging)
+            implementation(libs.firebase.auth)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation (libs.play.services.auth)
+            implementation (libs.firebase.auth.ktx)
+            implementation(libs.firebase.core)
+
         }
 
         all {
@@ -98,6 +106,7 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.googleid)
     ksp(libs.hilt.compiler)
 
     // Room
@@ -120,4 +129,6 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.hilt.navigation.compose.v120)
+
+    implementation(libs.firebase.firestore.ktx)
 }

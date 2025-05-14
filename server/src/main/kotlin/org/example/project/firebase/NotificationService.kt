@@ -12,21 +12,18 @@ import org.example.project.common.enums.StatusLaporan
 import org.slf4j.LoggerFactory
 
 class NotificationService(
-    private val firebaseService: FirebaseService,
     private val tokenProvider: FirebaseConfig,
     private val client: HttpClient
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
-    suspend fun notifyUserStatusUpdated(userId: String, statusLaporan: StatusLaporan) {
+    suspend fun notifyUserStatusUpdated(userId: String, token: String, statusLaporan: StatusLaporan) {
         val isUser = userId == "user123"
-        val token = firebaseService.getToken(userId)
         val title = "Laporan ${statusLaporan.label}"
         val message = if (isUser) statusLaporan.user else statusLaporan.ketua
         sendFcmNotification(token, title, message)
     }
 
-    suspend fun notifyCustom(userId: String, title: String, message: String, application: Application) {
-        val token = firebaseService.getToken(userId)
+    suspend fun notifyCustom(userId: String, token: String, title: String, message: String, application: Application) {
         sendFcmNotification(token, title, message)
     }
 

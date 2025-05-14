@@ -1,6 +1,5 @@
 package org.example.project.di
 
-import org.example.project.data.repositories.ProductRepository
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -10,8 +9,9 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import org.example.project.common.ServerConfig
 import org.example.project.data.remote.ApiService
+import org.example.project.data.remote.AuthInterceptor
+import org.example.project.data.repositories.ProductRepository
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
@@ -19,6 +19,14 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    @Provides
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .build()
+    }
+
 
     @Provides
     @Singleton

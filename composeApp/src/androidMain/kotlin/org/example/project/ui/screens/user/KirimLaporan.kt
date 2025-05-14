@@ -131,7 +131,7 @@ fun TambahLaporanScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
             Image(
-                painter = painterResource(id = R.drawable.srikandi),
+                painter = painterResource(id = R.drawable.satgas_ppkpt),
                 contentDescription = "Logo Srikandi",
                 modifier = Modifier
                     .height(120.dp)

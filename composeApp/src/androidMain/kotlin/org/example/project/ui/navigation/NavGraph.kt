@@ -3,30 +3,32 @@ package org.example.project.ui.navigation
 import SimpleDatePickerScreen
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.material3.Text
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import org.example.project.ui.screens.LoginScreen
 import org.example.project.ui.screens.ProductScreen
 import org.example.project.ui.screens.UnderDevelopmentScreen
 import org.example.project.ui.screens.ketua.DashboardScreen
-import org.example.project.ui.screens.ketua.VerifikasiScreen
-import org.example.project.ui.screens.user.UserDashboardScreen
-import org.example.project.ui.screens.user.TambahLaporanScreen
-import org.example.project.ui.screens.user.EditLaporanScreen
 import org.example.project.ui.screens.ketua.FormSatuScreen
+import org.example.project.ui.screens.ketua.VerifikasiScreen
+import org.example.project.ui.screens.user.EditLaporanScreen
+import org.example.project.ui.screens.user.TambahLaporanScreen
+import org.example.project.ui.screens.user.UserDashboardScreen
 import org.example.project.ui.viewmodel.VerifikasiViewModel
 
 sealed class Screen(val route: String) {
     object ProductList : Screen("product_list")
+    object Login : Screen("Login")
     object DashboardKetua : Screen("dashboard_ketua")
     object VerifikasiKasus : Screen("verifikasi_kasus")
-    object FormPelaporan : Screen("form_pelaporan") // ⬅ Tambahkan ini
+    object FormPelaporan : Screen("form_pelaporan")
     object KirimLaporan : Screen("kirim-laporan")
     object DashboardUser : Screen("dashboard_user")
     object EditLaporan : Screen("edit_laporan/{id}")
@@ -37,9 +39,15 @@ sealed class Screen(val route: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun navGraph(navController: NavHostController) {
-    NavHost(navController, startDestination = Screen.DashboardUser.route) {
+    NavHost(navController, startDestination = Screen.Login.route) {
         composable(Screen.ProductList.route) {
             ProductScreen()
+        }
+        composable(Screen.Login.route) {
+            LoginScreen(
+                navController = navController,
+                authViewModel = hiltViewModel(),
+            )
         }
         composable(Screen.DashboardKetua.route) {
             val verifikasiViewModel = hiltViewModel<VerifikasiViewModel>()
@@ -50,7 +58,7 @@ fun navGraph(navController: NavHostController) {
                 navController.getBackStackEntry(Screen.DashboardKetua.route)
             }
             val verifikasiViewModel = hiltViewModel<VerifikasiViewModel>(parentEntry)
-            VerifikasiScreen(navController, verifikasiViewModel)
+            VerifikasiScreen(navController, reportviewModel = hiltViewModel(), verifikasiViewModel)
         }
         composable(Screen.UnderDev.route) {
             UnderDevelopmentScreen()

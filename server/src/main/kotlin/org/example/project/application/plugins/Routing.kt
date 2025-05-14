@@ -20,7 +20,6 @@ import org.example.project.application.routes.productRoute
 import org.example.project.domain.services.inmemory.EvidenceService
 import org.example.project.domain.services.inmemory.FormSatuService
 import org.example.project.domain.services.inmemory.ReportService
-import org.example.project.firebase.FirebaseService
 import org.example.project.firebase.NotificationService
 import org.example.project.model.Response
 import org.example.project.model.request.*
@@ -50,7 +49,6 @@ fun Application.configureRouting() {
     val notificationService: NotificationService by inject()
     val formSatuService: FormSatuService by inject()
     val evidenceService: EvidenceService by inject()
-    val firebaseService: FirebaseService by inject()
 
     routing {
         //endpoint aplikasi (/api)
@@ -171,19 +169,37 @@ fun Application.configureRouting() {
                 }
 
                 patch("{id}") {
-                    val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("ID tidak valid")
-                    val statusRequest = call.receive<StatusLaporanRequest>()
+                    val authHeader = call.request.headers["Authorization"]
+                        ?: return@patch call.respond(HttpStatusCode.Unauthorized, "Missing Authorization header")
+
+                    val idToken = authHeader.removePrefix("Bearer ").trim()
+
+                    val decodedToken = try {
+                        FirebaseAuth.getInstance().verifyIdToken(idToken)
+                    } catch (e: Exception) {
+                        return@patch call.respond(
+                            HttpStatusCode.Unauthorized,
+                            "Invalid or expired ID token: ${e.message}"
+                        )
+                    }
+                    val userId = decodedToken.uid
+
+                    val id = call.parameters["id"]?.toIntOrNull()
+                        ?: return@patch call.respond(HttpStatusCode.BadRequest, "ID tidak valid")
+
+                    val request = call.receive<TokenRequest<StatusLaporanRequest>>()
+                    val statusRequest = request.data!!
                     val response = reportService.updateStatusLaporan(id, statusRequest)
                     call.respond(HttpStatusCode.OK, successResponse(response, "Status laporan berhasil diupdate"))
                     try {
-                        val userId = "user123"
                         withContext(Dispatchers.IO) {
-                            notificationService.notifyUserStatusUpdated(userId, statusRequest.statusLaporan)
+                            notificationService.notifyUserStatusUpdated(userId, request.fcmToken, statusRequest.statusLaporan)
                         }
                     } catch (e: Exception) {
                         call.application.log.error("Failed to send notification: ${e.message}")
                     }
                 }
+
             }
 
             // report bukti
@@ -220,52 +236,6 @@ fun Application.configureRouting() {
                         successResponse(null, "Bukti ke-$buktiKe untuk laporan ID $reportId berhasil dihapus")
                     )
                 }
-            }
-        }
-
-        route("/firebase") {
-            post("/register-token") {
-                val params = call.receiveParameters()
-                val userId = params["userId"] ?: return@post call.respondText(
-                    "userId required",
-                    status = HttpStatusCode.BadRequest
-                )
-                val token = params["token"] ?: return@post call.respondText(
-                    "token required",
-                    status = HttpStatusCode.BadRequest
-                )
-                try {
-                    firebaseService.saveToken(userId, token)
-                    call.respondText("Token registered")
-                } catch (e: Exception) {
-                    call.respondText(
-                        "Failed to register token: ${e.message}",
-                        status = HttpStatusCode.InternalServerError
-                    )
-                }
-            }
-            post("/login") {
-                val request = call.receive<LoginRequest>()
-                val idToken = request.idToken
-
-                val decodedToken = try {
-                    FirebaseAuth.getInstance().verifyIdToken(idToken)
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Unauthorized, "Invalid Firebase ID token")
-                    return@post
-                }
-
-                val email = decodedToken.email ?: run {
-                    call.respond(HttpStatusCode.Unauthorized, "Email not found")
-                    return@post
-                }
-
-                if (!email.endsWith("@polban.ac.id")) {
-                    call.respond(HttpStatusCode.Forbidden, "Hanya email dengan domain @polban.ac.id yang diizinkan")
-                    return@post
-                }
-
-                call.respond(HttpStatusCode.OK, successResponse(null, "Login successful"))
             }
         }
         staticResources("/static", "static")
