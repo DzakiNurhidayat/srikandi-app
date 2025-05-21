@@ -1,33 +1,29 @@
 package org.example.project.firebase
 
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import org.example.project.common.enums.StatusLaporan
-
+import org.slf4j.LoggerFactory
 
 class NotificationService(
-    private val firebaseService: FirebaseService,
-    private val application: Application,
+    private val tokenProvider: FirebaseConfig,
     private val client: HttpClient
 ) {
-    suspend fun notifyUserStatusUpdated(userId: String, statusLaporan: StatusLaporan) {
+    private val logger = LoggerFactory.getLogger(this::class.java)
+    suspend fun notifyUserStatusUpdated(userId: String, token: String, statusLaporan: StatusLaporan) {
         val isUser = userId == "user123"
-        val token = firebaseService.getToken(userId)
         val title = "Laporan ${statusLaporan.label}"
         val message = if (isUser) statusLaporan.user else statusLaporan.ketua
         sendFcmNotification(token, title, message)
     }
 
-    suspend fun notifyCustom(userId: String, title: String, message: String, application: Application) {
-        val token = firebaseService.getToken(userId)
+    suspend fun notifyCustom(userId: String, token: String, title: String, message: String, application: Application) {
         sendFcmNotification(token, title, message)
     }
 
@@ -37,7 +33,7 @@ class NotificationService(
         body: String,
         customData: Map<String, String> = emptyMap()
     ) {
-        val accessToken = application.getAccessToken()
+        val accessToken = tokenProvider.getAccessToken()
         val projectId = "srikandi-app"
 
         val message = buildJsonObject {
@@ -70,7 +66,15 @@ class NotificationService(
             contentType(ContentType.Application.Json)
             setBody(message)
         }
-        client.close()
+
+        if (response.status.isSuccess()) {
+            val responseBody = response.bodyAsText()
+            logger.info("FCM message sent successfully: $responseBody")
+        } else {
+            val errorBody = response.bodyAsText()
+            logger.error("Failed to send FCM message: HTTP ${response.status.value}, Body: $errorBody")
+            throw IllegalStateException("Failed to send FCM message: ${response.status}")
+        }
     }
 }
 

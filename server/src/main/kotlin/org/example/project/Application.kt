@@ -2,10 +2,13 @@ package org.example.project
 
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
+import org.example.project.application.plugins.configureCORS
 import org.example.project.application.plugins.configureRouting
 import org.example.project.application.plugins.configureSerialization
 import org.example.project.di.configureDI
+import org.example.project.firebase.FirebaseConfig
 import org.example.project.infastructure.DatabaseFactory
+import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 
 fun main(args: Array<String>) {
@@ -23,6 +26,9 @@ fun Application.module() {
         configureDI()
         configureSerialization()
         configureRouting()
+        configureCORS()
+        val firebaseConfig: FirebaseConfig by inject()
+        firebaseConfig.initializeFirebase()
     } catch (e: Exception) {
         logger.error("Failed to initialize application: ${e.message}", e)
         throw e

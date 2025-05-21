@@ -12,12 +12,8 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.example.project.MainActivity
 import org.example.project.R
-import org.example.project.firebase.FcmTokenManager
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -30,18 +26,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 remoteMessage.data
             )
         }
-    }
-
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        println("FCM Token: $token")
-        CoroutineScope(Dispatchers.IO).launch {
-            sendTokenToServer("user123", token)
-        }
-    }
-
-    private suspend fun sendTokenToServer(userId: String, token: String) {
-        FcmTokenManager.registerToken(userId, token)
     }
 
     private fun showNotification(title: String, message: String, data: Map<String, String> = emptyMap()) {

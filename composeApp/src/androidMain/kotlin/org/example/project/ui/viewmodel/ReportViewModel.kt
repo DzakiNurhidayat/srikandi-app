@@ -11,20 +11,26 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import org.example.project.data.repositories.ReportRepository
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.example.project.common.enums.StatusLaporan
+import org.example.project.data.repositories.ReportRepository
 import org.example.project.model.entities.Report
 import org.example.project.model.request.ReportRequest
+import org.example.project.model.request.StatusLaporanRequest
 import javax.inject.Inject
-import java.io.File
 
 @HiltViewModel
-class ReportViewModel @Inject constructor(private val repository: ReportRepository) : ViewModel() {
+class ReportViewModel @Inject constructor(
+    private val repository: ReportRepository,
+) : ViewModel() {
+
     private val _reports = MutableStateFlow<List<Report>>(emptyList())
     val reports: StateFlow<List<Report>> = _reports
+
+    private val _updateReportState = MutableStateFlow<Resource>(Resource.Idle)
+    val updateReportState: StateFlow<Resource> get() = _updateReportState
 
     fun getReports(onFinish: (() -> Unit)? = null) {
         viewModelScope.launch {
@@ -51,20 +57,15 @@ class ReportViewModel @Inject constructor(private val repository: ReportReposito
         uploadedFiles: List<Uri>
     ): Result<List<String>> {
         return try {
-            // Prepare MultipartBody.Part from URIs
             val parts = uploadedFiles.map { uri ->
-                // Get file name with extension
                 val fileName = getFileName(context, uri) ?: "evidence_${System.currentTimeMillis()}.dat"
                 val mimeType = context.contentResolver.getType(uri) ?: "application/octet-stream"
-
                 val inputStream = context.contentResolver.openInputStream(uri)
                 val requestBody = inputStream?.readBytes()?.toRequestBody(mimeType.toMediaType())
                     ?: throw Exception("Failed to read file content")
-
                 MultipartBody.Part.createFormData("files", fileName, requestBody)
             }
 
-            // Call repository with prepared parts
             val response = repository.uploadFilesAndGetPaths(parts)
             if (response.status) {
                 Result.success(response.data ?: emptyList())
@@ -77,7 +78,6 @@ class ReportViewModel @Inject constructor(private val repository: ReportReposito
         }
     }
 
-    // Helper function to get file name with extension
     private fun getFileName(context: Context, uri: Uri): String? {
         var fileName: String? = null
         context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -88,7 +88,6 @@ class ReportViewModel @Inject constructor(private val repository: ReportReposito
                 }
             }
         }
-        // Fallback to lastPathSegment if query fails
         return fileName ?: uri.lastPathSegment?.substringAfterLast("/")?.takeIf { it.contains(".") }
     }
 
@@ -108,19 +107,11 @@ class ReportViewModel @Inject constructor(private val repository: ReportReposito
         }
     }
 
-    fun deleteReport(id: Int) {
-        viewModelScope.launch {
-            try {
-                repository.deleteReport(id)
-                // Refresh reports list after deletion using getUserReports
-                val response = repository.getUserReports()
-                if (response.status) {
-                    _reports.value = response.data ?: emptyList()
-                }
-            } catch (e: Exception) {
-                Log.e("ReportViewModel", "Failed to delete report", e)
-            }
-        }
+    suspend fun updateReport(id: Int, status: StatusLaporan) {
+        val statusLaporanRequest = StatusLaporanRequest(status)
+        repository.updateReport(id, statusLaporanRequest, )
+        _updateReportState.value = Resource.Success(Unit)
+
     }
 
     suspend fun getReportById(id: Int): Report? {
@@ -137,9 +128,9 @@ class ReportViewModel @Inject constructor(private val repository: ReportReposito
         }
     }
 
-    suspend fun updateReport(id: Int, reportRequest: ReportRequest): Result<Report> {
+    suspend fun editReport(id: Int, reportRequest: ReportRequest): Result<Report> {
         return try {
-            val response = repository.updateReport(id, reportRequest)
+            val response = repository.editReport(id, reportRequest)
             if (response.status) {
                 Result.success(response.data ?: throw Exception("No report data returned"))
             } else {
@@ -151,4 +142,3 @@ class ReportViewModel @Inject constructor(private val repository: ReportReposito
         }
     }
 }
-

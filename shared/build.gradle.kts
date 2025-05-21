@@ -18,12 +18,14 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
+
     jvm()
-    
+
     sourceSets {
         val androidMain by getting {
             dependencies {
                 implementation(libs.ktor.client.okhttp)
+                implementation(libs.firebase.auth)
             }
         }
 
@@ -32,7 +34,9 @@ kotlin {
                 implementation(libs.kotlin.plugin.serialization)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
             }
         }
     }

@@ -1,8 +1,9 @@
 [versions]
+activityKtx = "1.10.1"
 agp = "8.7.3"
-android-compileSdk = "34"
+android-compileSdk = "35"
 android-minSdk = "24"
-android-targetSdk = "34"
+android-targetSdk = "35"
 androidx-activityCompose = "1.9.3"
 androidx-appcompat = "1.7.0"
 androidx-constraintlayout = "2.2.0"
@@ -12,17 +13,24 @@ androidx-lifecycle = "2.8.4"
 androidx-material = "1.12.0"
 androidx-test-junit = "1.2.1"
 compose-multiplatform = "1.7.0"
+credentials = "1.5.0"
 firebase = "33.12.0"
+firebaseAdmin = "9.2.0"
+firebaseAuth = "23.2.0"
+firebaseAuthKtx = "23.2.0"
 googleAuthLibraryOauth2Http = "1.33.1"
+googleid = "1.1.1"
+hiltLifecycleViewmodel = "1.0.0-alpha03"
 hiltNavigationCompose = "1.2.0"
+identitySdk = "1.2.0"
 junit = "4.13.2"
 kotlin = "2.1.10"
 kotlinx-time = "0.5.0"
 ktor = "3.1.1"
 logback = "1.5.16"
+playServicesAuthVersion = "21.3.0"
 postgresql = "42.7.2"
 h2 = "2.2.224"
-firebase-auth = "1.5.0"
 koin = "4.0.0"
 hilt = "2.51.1"
 exposed = "0.60.0"
@@ -32,9 +40,15 @@ retrofit = "2.11.0"
 okHttp = "4.12.0"
 composeui = "1.7.8"
 coil = "2.4.0"
+firebaseFirestoreKtx = "25.1.4"
+firebaseCore = "21.1.1"
 
 [libraries]
+androidx-hilt-lifecycle-viewmodel = { module = "androidx.hilt:hilt-lifecycle-viewmodel", version.ref = "hiltLifecycleViewmodel" }
 androidx-hilt-navigation-compose-v120 = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
+firebase-core = { module = "com.google.firebase:firebase-core", version.ref = "firebaseCore" }
+identity-sdk = { module = "com.google.android.libraries.identity:identity-sdk", version.ref = "identitySdk" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-time" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
@@ -50,6 +64,7 @@ androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", nam
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "composeui" }
 #ktor
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
@@ -59,7 +74,6 @@ ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negoti
 ktor-server-host-common = { module = "io.ktor:ktor-server-host-common-jvm", version.ref = "ktor" }
 ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages-jvm", version.ref = "ktor" }
 ktor-server-auth = { module = "io.ktor:ktor-server-auth-jvm", version.ref = "ktor" }
-firebase-auth-provider = { module = "com.kborowy:firebase-auth-provider", version.ref = "firebase-auth" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -70,8 +84,8 @@ ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 #koin
-koin-ktor = {module = "io.insert-koin:koin-ktor", version.ref = "koin"}
-koin-logger-slf4j = {module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin"}
+koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
+koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 #dagger hilt
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
@@ -101,7 +115,16 @@ composeui-material3 = { module = "androidx.compose.material3:material3", version
 #firebase
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+firebase-admin = { module = "com.google.firebase:firebase-admin", version.ref = "firebaseAdmin" }
 google-auth-library-oauth2-http = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "googleAuthLibraryOauth2Http" }
+firebase-auth = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuth" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuthVersion" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityKtx" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
+
 #coil
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 

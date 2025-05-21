@@ -6,6 +6,7 @@ import org.example.project.model.entities.Product
 import org.example.project.model.entities.Report
 import org.example.project.model.request.ReportRequest
 import org.example.project.model.request.StatusLaporanRequest
+import org.example.project.model.request.TokenRequest
 import retrofit2.http.*
 
 interface ApiService {
@@ -33,15 +34,19 @@ interface ApiService {
     @PATCH("api/reports/{id}")
     suspend fun updateStatus(
         @Path("id") id: Int,
-        @Body statusRequest: StatusLaporanRequest
+        @Body statusLaporanRequest: StatusLaporanRequest
     ): Response<Boolean>
 
     @GET("api/reports/user/{id}")
     suspend fun getReportById(@Path("id") id: Int): Response<Report>
 
     @PUT("api/reports/user/{id}")
-    suspend fun updateReport(
+    suspend fun editReport(
         @Path("id") id: Int,
         @Body reportRequest: ReportRequest
     ): Response<Report>
+}
+
+interface AuthTokenProvider {
+    fun getToken(): String?
 }
