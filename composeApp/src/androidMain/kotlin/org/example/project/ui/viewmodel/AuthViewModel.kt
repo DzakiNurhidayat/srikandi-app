@@ -20,6 +20,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -39,6 +40,33 @@ class AuthViewModel @Inject constructor(
 
     private val _availableRoles = MutableStateFlow<List<String>>(emptyList())
     val availableRoles: StateFlow<List<String>> = _availableRoles
+
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
+
+    private val _userRole = MutableStateFlow<String?>(null)
+    val userRole: StateFlow<String?> = _userRole
+
+    private val _isAuthChecked = MutableStateFlow(false)
+    val isAuthChecked: StateFlow<Boolean> = _isAuthChecked
+
+    init {
+        val user = auth.currentUser
+        _isLoggedIn.value = user != null
+
+        if (user != null) {
+            db.collection("users").document(user.uid).get()
+                .addOnSuccessListener { doc ->
+                    _userRole.value = doc.getString("activeRole")
+                    _isAuthChecked.value = true
+                }
+                .addOnFailureListener {
+                    _isAuthChecked.value = true
+                }
+        } else {
+            _isAuthChecked.value = true
+        }
+    }
 
     sealed interface AuthState {
         object Idle : AuthState
@@ -262,53 +290,6 @@ class AuthViewModel @Inject constructor(
         "kpn" to "Akuntansi"
     )
 
-//    fun saveUserLocally(
-//        uid: String,
-//        kode: String?,
-//        nama: String?,
-//        email: String?,
-//        photoUrl: String?,
-//        activeRole: String?,
-//        roles: List<String>?,
-//        kontak: String?,
-//        jnsKelamin: String?,
-//        tglLahir: Date,
-//        alamat: String?,
-//        lastLogin: Long?,
-//        fcmToken: String?
-//    ) {
-//        viewModelScope.launch {
-//            val userEntity = UserEntity(
-//                uid = uid,
-//                kode = kode,
-//                nama = nama,
-//                email = email,
-//                photoUrl = photoUrl,
-//                activeRole = activeRole,
-//                roles = roles,
-//                kontak = kontak,
-//                jnsKelamin = jnsKelamin,
-//                tglLahir = tglLahir,
-//                alamat = alamat,
-//                lastLogin = lastLogin,
-//                fcmToken = fcmToken
-//            )
-//            val userRef = db.collection("users").document(uid)
-//            val additionalData = mapOf(
-//                "kontak" to kontak
-//            )
-//
-//            userRef.set(additionalData, SetOptions.merge())
-//                .addOnSuccessListener {
-//                    if (roles != null && roles.size > 1) {
-//                        _authState.value = AuthState.RoleSelectionRequired(roles)
-//                    } else {
-//                        _authState.value = AuthState.Success(activeRole ?: "user")
-//                    }
-//                }
-//        }
-//    }
-
     fun selectRole(role: String) {
         val user = auth.currentUser ?: return
         val uid = user.uid
@@ -346,16 +327,33 @@ class AuthViewModel @Inject constructor(
         _availableRoles.value = emptyList()
     }
 
-//    fun logout() {
-//        auth.signOut()
-//        viewModelScope.launch(Dispatchers.IO) {
-//            auth.currentUser?.uid?.let { uid ->
-//                userDao.deleteUserById(uid)
-//            }
-//        }
-//        _authState.value = AuthState.Idle
-//        _availableRoles.value = emptyList()
-//    }
+    fun logout() {
+        val userId = auth.currentUser?.uid
+
+        if (userId != null) {
+            viewModelScope.launch {
+                try {
+                    db.collection("users").document(userId)
+                        .update("activeRole", null).await()
+                } catch (e: Exception) {
+                    _authState.value = AuthState.Error("Gagal logout: ${e.message}")
+                } finally {
+                    auth.signOut()
+                    resetLocalAuthState()
+                }
+            }
+        } else {
+            auth.signOut()
+            resetLocalAuthState()
+        }
+    }
+
+    private fun resetLocalAuthState() {
+        _availableRoles.value = emptyList()
+        _authState.value = AuthState.Idle
+        _userRole.value = null
+        _isLoggedIn.value = false
+    }
 
     private suspend fun getFcmTokenSuspend(): String? {
         return try {
