@@ -343,7 +343,6 @@ private fun EditableProfileImage(
             }
         }
     }
-    Log.d("ProfileImage", "Final image URL: $displayableImageUrl")
     Box(
         modifier = Modifier.size(130.dp),
         contentAlignment = Alignment.Center
@@ -422,18 +421,15 @@ private fun EditableProfileImage(
                 imageVector = Icons.Filled.Edit,
                 contentDescription = "Ganti Foto Profil",
                 tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                modifier = Modifier.size(20.dp) // Ukuran ikon pensil
+                modifier = Modifier.size(20.dp)
             )
         }
     }
 
     if (imageUploadState is ProfileViewModel.ImageUploadUiState.Error) {
-        Text(
-            text = "Gagal unggah: ${imageUploadState.message}",
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(top = 6.dp)
-        )
+        LaunchedEffect(imageUploadState.message) {
+            Toast.makeText(context, "Gagal unggah: ${imageUploadState.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     if (imageUploadState is ProfileViewModel.ImageUploadUiState.Success) {
@@ -441,6 +437,7 @@ private fun EditableProfileImage(
             Toast.makeText(context, "Foto profil berhasil diperbarui!", Toast.LENGTH_SHORT).show()
         }
     }
+
 }
 
 @Composable

@@ -23,7 +23,8 @@ import javax.inject.Inject
 
 class FirebaseMessagingService : FirebaseMessagingService() {
 
-    @Inject lateinit var tokenManager: TokenManager
+    @Inject
+    lateinit var tokenManager: TokenManager
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)

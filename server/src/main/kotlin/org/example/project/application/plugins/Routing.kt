@@ -247,65 +247,54 @@ fun Application.configureRouting() {
                             )
                         }
                     }
-                    route("/upload") {
-                        // update foto profil
-                        patch("/profile-picture") {
-                            try {
-                                val multipartData = call.receiveMultipart(formFieldLimit = 1024 * 1024)
-                                var uploadedFilePath: String? = null
+                }
+                post("/upload/profile-picture") {
+                    try {
+                        val multipartData = call.receiveMultipart(formFieldLimit = 1024 * 1024)
+                        var uploadedFilePath: String? = null
 
-                                multipartData.forEachPart { part ->
-                                    when (part) {
-                                        is PartData.FileItem -> {
-                                            val originalFileName = part.originalFileName ?: "unknown_file"
-                                            val fileExtension = File(originalFileName).extension
-                                            val uniqueFileName = "${UUID.randomUUID()}.$fileExtension"
-                                            val file = File("$uploadDir/$uniqueFileName")
-                                            part.provider().copyAndClose(file.writeChannel())
-                                            uploadedFilePath = "$uploadDir/$uniqueFileName"
-                                            log.info("Uploaded file: $originalFileName as $uniqueFileName to $uploadedFilePath")
-                                        }
-
-                                        is PartData.FormItem -> {
-                                            log.info("Form item: ${part.name} = ${part.value}")
-                                        }
-
-                                        else -> {
-                                            log.info("Unknown part type: ${part::class}")
-                                        }
-                                    }
-                                    part.dispose()
+                        multipartData.forEachPart { part ->
+                            when (part) {
+                                is PartData.FileItem -> {
+                                    val originalFileName = part.originalFileName ?: "unknown_file"
+                                    val fileExtension = File(originalFileName).extension
+                                    val uniqueFileName = "${UUID.randomUUID()}.$fileExtension"
+                                    val file = File("$uploadDir/$uniqueFileName")
+                                    part.provider().copyAndClose(file.writeChannel())
+                                    uploadedFilePath = "$uploadDir/$uniqueFileName"
+                                    log.info("Uploaded file: $originalFileName as $uniqueFileName to $uploadedFilePath")
                                 }
 
-                                if (uploadedFilePath != null) {
-                                    val clientAccessiblePath =
-                                        uploadedFilePath!!.removePrefix(uploadDir).removePrefix("/")
-
-                                    call.respond(
-                                        HttpStatusCode.OK,
-                                        successResponse(clientAccessiblePath, "File berhasil diunggah")
-                                    )
-                                } else {
-                                    call.respond(
-                                        HttpStatusCode.BadRequest,
-                                        errorResponse("Tidak ada file yang diunggah")
-                                    )
+                                is PartData.FormItem -> {
+                                    log.info("Form item: ${part.name} = ${part.value}")
                                 }
 
-                            } catch (e: Exception) {
-                                call.respond(
-                                    HttpStatusCode.InternalServerError,
-                                    errorResponse()
-                                )
+                                else -> {
+                                    log.info("Unknown part type: ${part::class}")
+                                }
                             }
+                            part.dispose()
                         }
 
-                    }
-                    get("/whoami") {
-                        val principal = call.principal<FirebaseUserPrincipal>()
+                        if (uploadedFilePath != null) {
+                            val clientAccessiblePath =
+                                uploadedFilePath!!.removePrefix(uploadDir).removePrefix("/")
+
+                            call.respond(
+                                HttpStatusCode.OK,
+                                successResponse(clientAccessiblePath, "File berhasil diunggah")
+                            )
+                        } else {
+                            call.respond(
+                                HttpStatusCode.BadRequest,
+                                errorResponse("Tidak ada file yang diunggah")
+                            )
+                        }
+
+                    } catch (e: Exception) {
                         call.respond(
-                            HttpStatusCode.OK,
-                            mapOf("uid" to principal?.uid, "email" to principal?.email)
+                            HttpStatusCode.InternalServerError,
+                            errorResponse()
                         )
                     }
                 }

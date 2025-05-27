@@ -46,7 +46,7 @@ interface ApiService {
     ): Response<Report>
 
     @Multipart
-    @PATCH("upload/profile-picture")
+    @POST("api/upload/profile-picture")
     suspend fun uploadProfileImage(
         @Part image: MultipartBody.Part,
     ): Response<String>
