@@ -9,8 +9,8 @@ import org.example.project.domain.services.inmemory.EvidenceService
 import org.example.project.domain.services.inmemory.FormSatuService
 import org.example.project.domain.services.inmemory.ProductService
 import org.example.project.domain.services.inmemory.ReportService
+import org.example.project.firebase.FcmService
 import org.example.project.firebase.FirebaseConfig
-import org.example.project.firebase.NotificationService
 import org.example.project.infastructure.repositories.inmemory.EvidenceRepository
 import org.example.project.infastructure.repositories.inmemory.FormSatuRepository
 import org.example.project.infastructure.repositories.inmemory.ProductRepository
@@ -38,7 +38,9 @@ val appModule = module {
         val credentialPath = env.config.propertyOrNull("firebase.fcmCredentialPath")?.getString()
             ?: System.getenv("FIREBASE_CREDENTIAL_PATH")
             ?: throw IllegalStateException("Firebase credentials path not found")
-        FirebaseConfig(credentialPath)
+        FirebaseConfig(credentialPath).apply {
+            initializeFirebase()
+        }
     }
     single {
         HttpClient(CIO) {
@@ -50,7 +52,7 @@ val appModule = module {
 }
 
 val firebaseModule = module {
-    single { NotificationService(get(), get()) }
+    single { FcmService(get(), get()) }
 }
 
 val productModule = module {

@@ -1,8 +1,10 @@
 package org.example.project.firebase
 
 import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.firestore.Firestore
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import com.google.firebase.cloud.FirestoreClient
 import org.slf4j.LoggerFactory
 import java.io.FileInputStream
 
@@ -14,6 +16,10 @@ class FirebaseConfig(credentialPath: String) {
             GoogleCredentials.fromStream(fileStream)
                 .createScoped(listOf("https://www.googleapis.com/auth/firebase.messaging"))
         }
+    }
+
+    private val initialized by lazy {
+        initializeFirebase()
     }
 
     fun initializeFirebase() {
@@ -35,5 +41,10 @@ class FirebaseConfig(credentialPath: String) {
             logger.error("Error getting Firebase access token", e)
             throw IllegalStateException("Error getting Firebase access token", e)
         }
+    }
+
+    val db: Firestore by lazy {
+        initialized
+        FirestoreClient.getFirestore()
     }
 }

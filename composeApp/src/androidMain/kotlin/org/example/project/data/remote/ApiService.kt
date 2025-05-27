@@ -6,7 +6,6 @@ import org.example.project.model.entities.Product
 import org.example.project.model.entities.Report
 import org.example.project.model.request.ReportRequest
 import org.example.project.model.request.StatusLaporanRequest
-import org.example.project.model.request.TokenRequest
 import retrofit2.http.*
 
 interface ApiService {
@@ -45,8 +44,10 @@ interface ApiService {
         @Path("id") id: Int,
         @Body reportRequest: ReportRequest
     ): Response<Report>
-}
 
-interface AuthTokenProvider {
-    fun getToken(): String?
+    @Multipart
+    @PATCH("upload/profile-picture")
+    suspend fun uploadProfileImage(
+        @Part image: MultipartBody.Part,
+    ): Response<String>
 }

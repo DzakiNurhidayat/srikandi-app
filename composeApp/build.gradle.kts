@@ -79,15 +79,17 @@ kotlin {
             implementation(libs.androidx.compose.foundation)
             implementation(libs.coil)
             implementation(libs.androidx.activity.ktx)
+            implementation(libs.composeui.material.icons.extended)
 
             // Firebase
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.messaging)
             implementation(libs.firebase.auth)
+            implementation(libs.firebase.auth.ktx)
+            implementation(libs.firebase.firestore.ktx)
             implementation(libs.androidx.credentials)
             implementation(libs.androidx.credentials.play.services.auth)
-            implementation (libs.play.services.auth)
-            implementation (libs.firebase.auth.ktx)
+            implementation(libs.play.services.auth)
             implementation(libs.firebase.core)
 
         }
@@ -129,6 +131,4 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.hilt.navigation.compose.v120)
-
-    implementation(libs.firebase.firestore.ktx)
 }

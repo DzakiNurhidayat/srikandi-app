@@ -1,70 +1,84 @@
 package org.example.project.ui.viewmodel
 
 import android.content.Context
-import android.util.Log
-import android.widget.Toast
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import org.example.project.data.repositories.AuthRepository
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val repository: AuthRepository
 ) : ViewModel() {
 
-    val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val db = FirebaseFirestore.getInstance()
-
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
-    val authState: StateFlow<AuthState> = _authState
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     private val _availableRoles = MutableStateFlow<List<String>>(emptyList())
-    val availableRoles: StateFlow<List<String>> = _availableRoles
+    val availableRoles: StateFlow<List<String>> = _availableRoles.asStateFlow()
 
     private val _isLoggedIn = MutableStateFlow(false)
-    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
 
     private val _userRole = MutableStateFlow<String?>(null)
-    val userRole: StateFlow<String?> = _userRole
 
     private val _isAuthChecked = MutableStateFlow(false)
-    val isAuthChecked: StateFlow<Boolean> = _isAuthChecked
+    val isAuthChecked: StateFlow<Boolean> = _isAuthChecked.asStateFlow()
+
+    private val isLoggingOut = AtomicBoolean(false)
 
     init {
-        val user = auth.currentUser
-        _isLoggedIn.value = user != null
+        checkInitialAuthStatus()
+    }
 
-        if (user != null) {
-            db.collection("users").document(user.uid).get()
-                .addOnSuccessListener { doc ->
-                    _userRole.value = doc.getString("activeRole")
+    private fun checkInitialAuthStatus() {
+        if (isLoggingOut.get()) {
+            return
+        }
+
+        viewModelScope.launch {
+            repository.getInitialUserStatus()
+                .catch { e ->
+                    if (!isLoggingOut.get()) {
+                        _authState.value = AuthState.Error("Gagal memeriksa status awal: ${e.message}")
+                    }
                     _isAuthChecked.value = true
                 }
-                .addOnFailureListener {
-                    _isAuthChecked.value = true
+                .collect { state ->
+                    if (!isLoggingOut.get()) {
+                        _authState.value = state
+                        when (state) {
+                            is AuthState.Success -> {
+                                _isLoggedIn.value = true
+                                _userRole.value = state.activeRole
+                                _availableRoles.value = emptyList()
+                            }
+
+                            is AuthState.RoleSelectionRequired -> {
+                                _isLoggedIn.value = true
+                                _userRole.value = null
+                                _availableRoles.value = state.roles
+                            }
+
+                            else -> {
+                                _isLoggedIn.value = false
+                                _userRole.value = null
+                            }
+                        }
+                    }
+
+                    if (state !is AuthState.Loading) {
+                        _isAuthChecked.value = true
+                    }
                 }
-        } else {
-            _isAuthChecked.value = true
         }
     }
 
@@ -80,246 +94,78 @@ class AuthViewModel @Inject constructor(
             val user: FirebaseUser,
             val kontak: String?,
             val jenisKelamin: String?,
-            val selectedRole: String?,
             val roles: List<String>,
-            val fcmToken: String,
+            val fcmToken: String
         ) : AuthState
-
         data class RoleSelectionRequired(val roles: List<String>) : AuthState
     }
 
-    fun startGoogleSignIn(context: Context, webClientId: String, onLoadingChanged: (Boolean) -> Unit) {
-        onLoadingChanged(true)
-        _authState.value = AuthState.Loading
-
+    fun startGoogleSignIn(context: Context, webClientId: String) {
+        if (isLoggingOut.get()) {
+            _authState.value = AuthState.Error("Proses logout sedang berlangsung.")
+            return
+        }
         viewModelScope.launch {
-            try {
-                val authToken = getGoogleIdToken(context, webClientId) ?: run {
-                    _authState.value = AuthState.Error("ID Token null")
-                    onLoadingChanged(false)
-                    return@launch
+            repository.signInWithGoogle(context, webClientId)
+                .catch { e ->
+                    _authState.value = AuthState.Error("Login gagal: ${e.message ?: "Kesalahan tidak diketahui"}")
                 }
-
-                signInWithGoogleIDToken(authToken)
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error("Login gagal: ${e.message}")
-                onLoadingChanged(false)
-            }
-        }
-    }
-
-    private suspend fun getGoogleIdToken(context: Context, webClientId: String): String? {
-        try {
-            val credentialManager = CredentialManager.create(context)
-            val request = GetCredentialRequest(
-                credentialOptions = listOf(
-                    GetGoogleIdOption.Builder()
-                        .setServerClientId(webClientId)
-                        .setFilterByAuthorizedAccounts(false)
-                        .build()
-                )
-            )
-
-            val result = credentialManager.getCredential(context, request)
-            return (result.credential as? GoogleIdTokenCredential)?.idToken
-        } catch (e: GetCredentialException) {
-            throw e
-        }
-    }
-
-    private fun signInWithGoogleIDToken(idToken: String) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        auth.signInWithCredential(credential).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val user = auth.currentUser
-                if (user?.email?.endsWith("polban.ac.id") != true) {
-                    auth.signOut()
-                    _authState.value = AuthState.Error("Hanya email @polban.ac.id yang diperbolehkan")
-                } else {
-                    db.collection("users").document(user.uid).get()
-                        .addOnSuccessListener { document ->
-                            if (document.exists()) {
-                                handleExistingUser(document)
-                            } else {
-                                checkPendingUser(user)
-                            }
-                        }
-                        .addOnFailureListener {
-                            _authState.value = AuthState.Error("Gagal memeriksa status pengguna: ${it.message}")
-                        }
-                }
-            } else {
-                _authState.value = AuthState.Error("Login gagal: ${task.exception?.message}")
-            }
-        }
-    }
-
-    private fun handleExistingUser(doc: com.google.firebase.firestore.DocumentSnapshot) {
-        val currentRole = doc.getString("role") ?: "User"
-        val roles = doc.get("roles") as? List<String> ?: listOf("User")
-        _availableRoles.value = roles
-
-        if (roles.size > 1) {
-            _authState.value = AuthState.RoleSelectionRequired(roles)
-        } else {
-            _authState.value = AuthState.Success(currentRole)
-        }
-    }
-
-    private fun checkPendingUser(user: FirebaseUser) {
-        db.collection("users_pending").whereEqualTo("email", user.email).get()
-            .addOnSuccessListener { pendingDocs ->
-                val doc = pendingDocs.documents.firstOrNull()
-                val nama = doc?.getString("nama")
-                val nim = doc?.getString("nim")
-                if (nama.isNullOrEmpty() || nim.isNullOrEmpty()) {
-                    _authState.value = AuthState.Error("Data pengguna tidak lengkap: Nama atau NIM kosong")
-                    return@addOnSuccessListener
-                }
-                Log.d("AuthViewModel", "User found in pending collection: $nama, $nim")
-                checkRolesAndSave(user, nama, nim)
-            }
-            .addOnFailureListener {
-                Log.e("AuthViewModel", "Failed to check pending user: ${it.message}")
-                _authState.value = AuthState.Error("Gagal memeriksa status pengguna: ${it.message}")
-            }
-    }
-
-    private fun checkRolesAndSave(
-        user: FirebaseUser,
-        nama: String,
-        nim: String,
-    ) {
-        val email = user.email?.trim()?.lowercase() ?: ""
-        val uid = user.uid
-
-        viewModelScope.launch {
-            try {
-                val fcmToken = getFcmTokenSuspend() ?: throw Exception("Gagal mengambil FCM token")
-                val snapshot = db.collection("roles").get().await()
-                val roles = mutableSetOf("User")
-                for (doc in snapshot) {
-                    val emails = doc.get("emails") as? List<*>
-                    if (emails?.contains(email) == true) {
-                        roles.add(doc.id)
+                .collect { state ->
+                    _authState.value = state
+                    if (state is AuthState.RoleSelectionRequired) {
+                        _availableRoles.value = state.roles
+                    } else if (state is AuthState.Success) {
+                        _availableRoles.value = emptyList()
                     }
                 }
-                val rolesList = roles.toList()
-                _availableRoles.value = rolesList
-                _authState.value = AuthState.FormRequired(
-                    uid = uid,
-                    nama = nama,
-                    nim = nim,
-                    user = user,
-                    kontak = null,
-                    jenisKelamin = null,
-                    selectedRole = null,
-                    roles = rolesList,
-                    fcmToken = fcmToken
-                )
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error("Login gagal: ${e.message}")
-            }
         }
     }
 
-    fun saveUserToFirestore(
-        uid: String,
-        nama: String,
-        nim: String,
-        user: FirebaseUser,
+    fun saveCompletedForm(
+        originalFormRequiredState: AuthState.FormRequired,
         kontak: String,
         alamat: String,
-        jenisKelamin: String,
-        selectedRole: String,
-        roles: List<String>,
-        fcmToken: String
+        jenisKelamin: String
     ) {
-        val userRef = db.collection("users").document(uid)
-
-        val userData = mapOf(
-            "nama" to nama,
-            "nim" to nim,
-            "jurusan" to getJurusan(user.email ?: ""),
-            "email" to user.email,
-            "fotoProfil" to user.photoUrl?.toString().orEmpty(),
-            "kontak" to kontak,
-            "kontak" to alamat,
-            "jenisKelamin" to jenisKelamin,
-            "roles" to roles,
-            "activeRole" to selectedRole,
-            "lastLogin" to FieldValue.serverTimestamp()
-        )
-
-        userRef.set(userData, SetOptions.merge())
-            .addOnSuccessListener {
-                val deviceData = mapOf(
-                    "fcmToken" to fcmToken,
-                    "timestamp" to FieldValue.serverTimestamp()
-                )
-                userRef.collection("devices").document(uid).set(deviceData, SetOptions.merge())
-                    .addOnSuccessListener {
-                        if (roles.size > 1) {
-                            _availableRoles.value = roles
-                            _authState.value = AuthState.RoleSelectionRequired(roles)
-                        } else {
-                            _authState.value = AuthState.Success(selectedRole)
-                        }
+        viewModelScope.launch {
+            repository.saveNewUserWithDetails(
+                uid = originalFormRequiredState.uid,
+                nama = originalFormRequiredState.nama,
+                nim = originalFormRequiredState.nim,
+                user = originalFormRequiredState.user,
+                kontak = kontak,
+                alamat = alamat,
+                jenisKelamin = jenisKelamin,
+                roles = originalFormRequiredState.roles,
+                fcmToken = originalFormRequiredState.fcmToken
+            )
+                .catch { e ->
+                    _authState.value = AuthState.Error("Gagal menyimpan data: ${e.message}")
+                }
+                .collect { newState ->
+                    _authState.value = newState
+                    if (newState is AuthState.RoleSelectionRequired) {
+                        _availableRoles.value = newState.roles
+                    } else if (newState is AuthState.Success) {
+                        _availableRoles.value = emptyList()
                     }
-                    .addOnFailureListener { e ->
-                        _authState.value = AuthState.Error("Gagal menyimpan data perangkat: ${e.message}")
+                }
+        }
+    }
+
+
+    fun finalizeRoleSelection(role: String) {
+        viewModelScope.launch {
+            repository.selectActiveRole(role)
+                .catch { e ->
+                    _authState.value = AuthState.Error("Gagal memilih peran: ${e.message}")
+                }
+                .collect { newState ->
+                    _authState.value = newState
+                    if (newState is AuthState.Success) {
+                        clearAvailableRoles()
                     }
-            }
-            .addOnFailureListener { e ->
-                _authState.value = AuthState.Error("Gagal menyimpan user: ${e.message}")
-            }
-    }
-
-    private fun getJurusan(email: String): String {
-        val namaEmail = email.substringBefore("@")
-        val parts = namaEmail.split(".")
-        val kodeMentah = parts.getOrNull(2)
-        val kode = kodeMentah?.takeWhile { it.isLetter() }
-
-        return kodeJurusanMap[kode?.lowercase()] ?: "Jurusan Tidak Dikenal"
-    }
-
-    private val kodeJurusanMap = mapOf(
-        "tif" to "Teknik Komputer dan Informatika",
-        "ksy" to "Akuntansi",
-        "kpn" to "Akuntansi"
-    )
-
-    fun selectRole(role: String) {
-        val user = auth.currentUser ?: return
-        val uid = user.uid
-
-        db.collection("users").document(uid).update("activeRole", role)
-            .addOnSuccessListener {
-                _authState.value = AuthState.Success(role)
-            }
-            .addOnFailureListener {
-                _authState.value = AuthState.Error("Gagal memperbarui role: ${it.message}")
-            }
-    }
-
-    fun handleRoleSelection(
-        authViewModel: AuthViewModel,
-        role: String,
-        context: Context,
-        coroutineScope: CoroutineScope
-    ) {
-        coroutineScope.launch {
-            val user = authViewModel.auth.currentUser
-            if (user == null) {
-                Toast.makeText(context, "Sesi pengguna tidak valid, silakan login ulang", Toast.LENGTH_LONG).show()
-                clearAvailableRoles()
-                auth.signOut()
-                _authState.value = AuthState.Idle
-                return@launch
-            }
-            authViewModel.selectRole(role)
-            authViewModel.clearAvailableRoles()
+                }
         }
     }
 
@@ -327,40 +173,35 @@ class AuthViewModel @Inject constructor(
         _availableRoles.value = emptyList()
     }
 
-    fun logout() {
-        val userId = auth.currentUser?.uid
-
-        if (userId != null) {
-            viewModelScope.launch {
-                try {
-                    db.collection("users").document(userId)
-                        .update("activeRole", null).await()
-                } catch (e: Exception) {
-                    _authState.value = AuthState.Error("Gagal logout: ${e.message}")
-                } finally {
-                    auth.signOut()
-                    resetLocalAuthState()
+    fun logout(onResult: (Boolean) -> Unit) {
+        if (!isLoggingOut.compareAndSet(false, true)) {
+            viewModelScope.launch(Dispatchers.Main) {
+                onResult(false)
+            }
+            return
+        }
+        _authState.value = AuthState.Loading
+        viewModelScope.launch {
+            var operationSuccess = false
+            try {
+                repository.logoutCurrentAccount()
+                operationSuccess = true
+            } catch (e: Exception) {
+                operationSuccess = false
+            } finally {
+                resetLocalAuthState()
+                isLoggingOut.set(false)
+                kotlinx.coroutines.withContext(Dispatchers.Main) {
+                    onResult(operationSuccess)
                 }
             }
-        } else {
-            auth.signOut()
-            resetLocalAuthState()
         }
     }
 
     private fun resetLocalAuthState() {
-        _availableRoles.value = emptyList()
         _authState.value = AuthState.Idle
+        _availableRoles.value = emptyList()
         _userRole.value = null
         _isLoggedIn.value = false
-    }
-
-    private suspend fun getFcmTokenSuspend(): String? {
-        return try {
-            FirebaseMessaging.getInstance().token.await()
-        } catch (e: Exception) {
-            Log.e("AuthViewModel", "Failed to get FCM token: ${e.message}")
-            null
-        }
     }
 }

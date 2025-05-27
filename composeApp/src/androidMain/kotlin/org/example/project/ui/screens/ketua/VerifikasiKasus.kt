@@ -261,7 +261,7 @@ fun VerifikasiScreen(
     }
     if (showAcceptDialog) {
         confirmationDialog(
-            title = "Tolak Laporan",
+            title = "Terima Laporan",
             message = "Apakah anda yakin ingin menerima laporan ini?",
             confirmText = "Terima",
             confirmButtonColor = MaterialTheme.colorScheme.primary,

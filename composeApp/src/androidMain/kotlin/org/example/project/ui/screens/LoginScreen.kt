@@ -1,6 +1,7 @@
 package org.example.project.ui.screens
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -36,45 +37,61 @@ fun LoginScreen(
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     val webClientId = stringResource(id = R.string.web_client_id)
 
     val authState by authViewModel.authState.collectAsState()
     val availableRoles by authViewModel.availableRoles.collectAsState()
 
     var isLoading by remember { mutableStateOf(false) }
-    var selectedRole by remember { mutableStateOf<String?>(null) }
+    var selectedRoleUi by remember { mutableStateOf<String?>(null) }
     var showRoleDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(authState) {
+        isLoading = authState is AuthViewModel.AuthState.Loading
+    }
 
     HandleAuthState(
         authState = authState,
         navController = navController,
-        onLoadingChange = { isLoading = it },
         onShowRoleDialog = { showRoleDialog = it },
-        authViewModel = authViewModel
+        authViewModel = authViewModel,
+        context = context
     )
 
-    if (showRoleDialog && authState !is AuthViewModel.AuthState.FormRequired) {
-        RoleSelectionDialog(
-            availableRoles = availableRoles,
-            selectedRole = selectedRole,
-            onRoleSelected = { role ->
-                selectedRole = role
-                showRoleDialog = false
-                authViewModel.handleRoleSelection(authViewModel, role, context, coroutineScope)
-            },
-            onDismiss = { showRoleDialog = false }
-        )
+    if ((showRoleDialog || authState is AuthViewModel.AuthState.RoleSelectionRequired) && authState !is AuthViewModel.AuthState.FormRequired) {
+        val rolesToDisplay = if (authState is AuthViewModel.AuthState.RoleSelectionRequired) {
+            (authState as AuthViewModel.AuthState.RoleSelectionRequired).roles
+        } else {
+            availableRoles
+        }
+
+        if (rolesToDisplay.isNotEmpty()) {
+            RoleSelectionDialog(
+                availableRoles = rolesToDisplay,
+                selectedRole = selectedRoleUi,
+                onRoleSelected = { role ->
+                    selectedRoleUi = role
+                    showRoleDialog = false
+                    authViewModel.finalizeRoleSelection(role)
+                },
+                onDismiss = {
+                    showRoleDialog = false
+                    if (authState is AuthViewModel.AuthState.RoleSelectionRequired) {
+                        Toast.makeText(context, "Anda harus memilih peran untuk melanjutkan.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            )
+        }
     }
 
-    if (authState !is AuthViewModel.AuthState.FormRequired) {
+
+    if (authState is AuthViewModel.AuthState.Idle || authState is AuthViewModel.AuthState.Error) {
         LoginContent(
             isLoading = isLoading,
             onLoginClick = {
                 authViewModel.startGoogleSignIn(
                     context = context,
-                    webClientId = webClientId,
-                    onLoadingChanged = { isLoading = it }
+                    webClientId = webClientId
                 )
             }
         )
@@ -85,77 +102,50 @@ fun LoginScreen(
 private fun HandleAuthState(
     authState: AuthViewModel.AuthState,
     navController: NavHostController,
-    onLoadingChange: (Boolean) -> Unit,
     onShowRoleDialog: (Boolean) -> Unit,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    context: Context
 ) {
-    val context = LocalContext.current
-    var showForm by remember { mutableStateOf(false) }
-
     LaunchedEffect(authState) {
         when (authState) {
             is AuthViewModel.AuthState.Success -> {
-                onLoadingChange(false)
-                showForm = false
                 Toast.makeText(context, "Login berhasil!", Toast.LENGTH_SHORT).show()
                 val destination = when (authState.activeRole) {
-                    "satgas" -> "under_development"
-                    "ketua" -> "dashboard_ketua"
+                    "Satgas" -> "under_development"
+                    "Ketua Satgas" -> "dashboard_ketua"
                     else -> "dashboard_user"
                 }
                 navController.navigate(destination) {
                     popUpTo("login") { inclusive = true }
                 }
             }
-
             is AuthViewModel.AuthState.Error -> {
-                onLoadingChange(false)
-                showForm = false
                 Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
             }
-
             is AuthViewModel.AuthState.RoleSelectionRequired -> {
-                onLoadingChange(false)
-                showForm = false
                 onShowRoleDialog(true)
             }
-
-            is AuthViewModel.AuthState.Loading -> {
-                onLoadingChange(true)
-                showForm = false
-            }
-
             is AuthViewModel.AuthState.FormRequired -> {
-                showForm = true
-                onLoadingChange(false)
+                onShowRoleDialog(false)
             }
-
-            is AuthViewModel.AuthState.Idle -> {
-                onLoadingChange(false)
-                showForm = false
-            }
+            else -> {}
         }
     }
 
-    if (showForm && authState is AuthViewModel.AuthState.FormRequired) {
+    if (authState is AuthViewModel.AuthState.FormRequired) {
         AdditionalDataForm(
             onSave = { alamat, kontak, jenisKelamin ->
-                authViewModel.saveUserToFirestore(
-                    uid = authState.uid,
-                    nama = authState.nama,
-                    nim = authState.nim,
-                    user = authState.user,
-                    kontak = kontak,
+                authViewModel.saveCompletedForm(
+                    originalFormRequiredState = authState,
                     alamat = alamat,
-                    jenisKelamin = jenisKelamin,
-                    selectedRole = authState.selectedRole ?: authState.roles.firstOrNull() ?: "User",
-                    roles = authState.roles,
-                    fcmToken = authState.fcmToken
+                    kontak = kontak,
+                    jenisKelamin = jenisKelamin
                 )
             }
         )
     }
 }
+
 
 @SuppressLint("SimpleDateFormat")
 @Composable

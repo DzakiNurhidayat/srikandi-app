@@ -1,9 +1,11 @@
 package org.example.project.di
 
+import android.content.Context
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -11,7 +13,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.example.project.data.remote.ApiService
 import org.example.project.data.remote.AuthInterceptor
-import org.example.project.data.repositories.ProductRepository
+import org.example.project.utils.TokenManager
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
@@ -21,19 +23,9 @@ import javax.inject.Singleton
 object NetworkModule {
 
     @Provides
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
-        return OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
-            .build()
-    }
-
-
-    @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit {
+    fun provideRetrofit(client: OkHttpClient): Retrofit {
         val json = Json { ignoreUnknownKeys = true }
-        val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
-        val client = OkHttpClient.Builder().addInterceptor(logging).build()
 
         return Retrofit.Builder()
             .baseUrl("http://10.0.2.2:8080/")
@@ -42,11 +34,31 @@ object NetworkModule {
             .build()
     }
 
-    @Provides
-    @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService = retrofit.create(ApiService::class.java)
 
     @Provides
     @Singleton
-    fun provideProductRepository(apiService: ApiService): ProductRepository = ProductRepository(apiService)
+    fun provideAuthInterceptor(tokenManager: TokenManager): AuthInterceptor {
+        return AuthInterceptor(tokenManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+        val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+        return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .addInterceptor(logging)
+            .build()
+    }
+
+
+    @Provides
+     @Singleton
+     fun provideTokenManager(@ApplicationContext context: Context): TokenManager {
+         return TokenManager(context)
+     }
+
+    @Provides
+    @Singleton
+    fun provideApiService(retrofit: Retrofit): ApiService = retrofit.create(ApiService::class.java)
 }

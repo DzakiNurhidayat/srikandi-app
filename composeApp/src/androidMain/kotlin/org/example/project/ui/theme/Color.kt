@@ -12,3 +12,4 @@ val secondary = Color(0xFFD9D9D9)
 val error = Color(0xFFB00020)
 val primary = Color(0xFF241BCA)
 val onPrimary = Color.White
+val primaryContainer = Color(0xFFD6C0C0)

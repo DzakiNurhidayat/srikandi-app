@@ -3,7 +3,6 @@ package org.example.project.ui.viewmodel
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,11 +39,9 @@ class ReportViewModel @Inject constructor(
                     _reports.value = response.data ?: emptyList()
                 } else {
                     _reports.value = emptyList()
-                    Log.e("ReportViewModel", "Error: ${response.message}")
                 }
             } catch (e: Exception) {
                 _reports.value = emptyList()
-                Log.e("ReportViewModel", "Exception: ${e.message}")
             } finally {
                 delay(500)
                 onFinish?.invoke()
@@ -73,7 +70,6 @@ class ReportViewModel @Inject constructor(
                 Result.failure(Exception(response.message))
             }
         } catch (e: Exception) {
-            Log.e("ReportViewModel", "Error uploading files: ${e.message}")
             Result.failure(e)
         }
     }
@@ -102,16 +98,14 @@ class ReportViewModel @Inject constructor(
                 Result.failure(Exception(response.message))
             }
         } catch (e: Exception) {
-            Log.e("ReportViewModel", "Error submitting report: ${e.message}")
             Result.failure(e)
         }
     }
 
     suspend fun updateReport(id: Int, status: StatusLaporan) {
         val statusLaporanRequest = StatusLaporanRequest(status)
-        repository.updateReport(id, statusLaporanRequest, )
+        repository.updateReport(id, statusLaporanRequest)
         _updateReportState.value = Resource.Success(Unit)
-
     }
 
     suspend fun getReportById(id: Int): Report? {
@@ -123,7 +117,6 @@ class ReportViewModel @Inject constructor(
                 null
             }
         } catch (e: Exception) {
-            Log.e("ReportViewModel", "Error fetching report: ${e.message}")
             null
         }
     }
@@ -137,7 +130,6 @@ class ReportViewModel @Inject constructor(
                 Result.failure(Exception(response.message))
             }
         } catch (e: Exception) {
-            Log.e("ReportViewModel", "Error updating report: ${e.message}")
             Result.failure(e)
         }
     }

@@ -9,19 +9,37 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import org.example.project.common.enums.StatusLaporan
+import org.example.project.utils.await
 import org.slf4j.LoggerFactory
 
-class NotificationService(
+class FcmService(
     private val tokenProvider: FirebaseConfig,
     private val client: HttpClient
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
-    suspend fun notifyUserStatusUpdated(userId: String, token: String, statusLaporan: StatusLaporan) {
-        val isUser = userId == "user123"
+    suspend fun notifyUserStatusUpdated(userId: String, statusLaporan: StatusLaporan) {
+        val isUser = userId == "restu.akbar.tif23@Polban.ac.id"
+        val message = if (isUser) statusLaporan.ketua else statusLaporan.user
         val title = "Laporan ${statusLaporan.label}"
-        val message = if (isUser) statusLaporan.user else statusLaporan.ketua
-        sendFcmNotification(token, title, message)
+        val token = getActiveFcmToken(userId)
+        if (token != null) {
+            sendFcmNotification(token, title, message)
+        }
     }
+
+    suspend fun getActiveFcmToken(userId: String): String? {
+        val firestore = tokenProvider.db
+        val snapshot = firestore.collection("users")
+            .document(userId)
+            .collection("devices")
+            .whereEqualTo("isActive", true)
+            .limit(1)
+            .get()
+            .await()
+
+        return snapshot.documents.firstOrNull()?.getString("fcmToken")
+    }
+
 
     suspend fun notifyCustom(userId: String, token: String, title: String, message: String, application: Application) {
         sendFcmNotification(token, title, message)

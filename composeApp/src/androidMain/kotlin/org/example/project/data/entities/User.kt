@@ -2,8 +2,7 @@ package org.example.project.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.google.firebase.firestore.FieldValue
-import java.util.Date
+import java.util.*
 
 @Entity(tableName = "users")
 data class UserEntity(

@@ -3,9 +3,18 @@ package org.example.project.ui.navigation
 import SimpleDatePickerScreen
 import android.content.Context
 import android.os.Build
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -13,23 +22,15 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import org.example.project.ui.screens.LoginScreen
-import org.example.project.ui.screens.ProductScreen
-import org.example.project.ui.screens.UnderDevelopmentScreen
-import org.example.project.ui.screens.OnboardingScreen
+import org.example.project.ui.screens.*
 import org.example.project.ui.screens.ketua.DashboardScreen
 import org.example.project.ui.screens.ketua.FormSatuScreen
 import org.example.project.ui.screens.ketua.VerifikasiScreen
-import org.example.project.ui.screens.user.UserDashboardScreen
-import org.example.project.ui.screens.user.TambahLaporanScreen
 import org.example.project.ui.screens.user.EditLaporanScreen
+import org.example.project.ui.screens.user.TambahLaporanScreen
+import org.example.project.ui.screens.user.UserDashboardScreen
 import org.example.project.ui.viewmodel.AuthViewModel
 import org.example.project.ui.viewmodel.VerifikasiViewModel
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
 
 sealed class Screen(val route: String) {
     object Onboarding : Screen("onboarding")
@@ -43,6 +44,7 @@ sealed class Screen(val route: String) {
     object EditLaporan : Screen("edit_laporan/{id}")
     object UnderDev : Screen("under_development")
     object Kalendar : Screen("kalendar")
+    object Profil : Screen("profil")
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -52,13 +54,16 @@ fun navGraph(navController: NavHostController) {
     val sharedPref = context.getSharedPreferences("SrikandiAppPrefs", Context.MODE_PRIVATE)
     val isFirstLaunch = sharedPref.getBoolean("isFirstLaunch", true)
 
-    val authViewModel: AuthViewModel = hiltViewModel()
-    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
-    val userRole by authViewModel.userRole.collectAsState()
+    val activity = LocalContext.current as ComponentActivity
+    val authViewModel: AuthViewModel = hiltViewModel(activity)
+    val authState by authViewModel.authState.collectAsState()
     val isAuthChecked by authViewModel.isAuthChecked.collectAsState()
 
     if (!isAuthChecked) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             CircularProgressIndicator()
         }
         return
@@ -66,14 +71,18 @@ fun navGraph(navController: NavHostController) {
 
     val startDestination = when {
         isFirstLaunch -> Screen.Onboarding.route
-        isLoggedIn && userRole != null -> when (userRole) {
-            "Ketua Satgas" -> Screen.DashboardKetua.route
-            "Satgas" -> Screen.UnderDev.route
-            "User" -> Screen.DashboardUser.route
-            else -> Screen.Login.route
+        authState is AuthViewModel.AuthState.Success -> {
+            when ((authState as AuthViewModel.AuthState.Success).activeRole) {
+                "Ketua Satgas", -> Screen.DashboardKetua.route
+                "Satgas", "Pengguna Umum" -> Screen.Profil.route
+                else -> {
+                    Screen.Login.route
+                }
+            }
         }
-        else -> Screen.Login.route
+        else -> {Screen.Login.route}
     }
+
     NavHost(navController, startDestination = startDestination) {
         composable(Screen.Onboarding.route) {
             OnboardingScreen(
@@ -142,6 +151,12 @@ fun navGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val reportId = backStackEntry.arguments?.getInt("id") ?: return@composable
             EditLaporanScreen(navController = navController, reportId = reportId)
+        }
+        composable(Screen.Profil.route) {
+            ProfileScreen(
+                navController = navController,
+                authViewModel
+            )
         }
     }
 }
