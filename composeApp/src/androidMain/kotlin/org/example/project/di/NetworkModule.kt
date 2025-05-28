@@ -13,8 +13,10 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.example.project.data.remote.ApiService
 import org.example.project.data.remote.AuthInterceptor
+import org.example.project.data.remote.NewsApiService
 import org.example.project.utils.TokenManager
 import retrofit2.Retrofit
+import javax.inject.Named
 import javax.inject.Singleton
 
 
@@ -24,6 +26,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("internal")
     fun provideRetrofit(client: OkHttpClient): Retrofit {
         val json = Json { ignoreUnknownKeys = true }
 
@@ -34,6 +37,32 @@ object NetworkModule {
             .build()
     }
 
+    @Provides
+    @Singleton
+    @Named("internal")
+    fun provideApiService(
+        @Named("internal") retrofit: Retrofit
+    ): ApiService = retrofit.create(ApiService::class.java)
+
+    @Provides
+    @Singleton
+    @Named("external")
+    fun provideExternalRetrofit(client: OkHttpClient): Retrofit {
+        val json = Json { ignoreUnknownKeys = true }
+
+        return Retrofit.Builder()
+            .baseUrl("https://newsapi.org/")
+            .client(client)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @Named("external")
+    fun provideNewsApiService(
+        @Named("external") retrofit: Retrofit
+    ): NewsApiService = retrofit.create(NewsApiService::class.java)
 
     @Provides
     @Singleton
@@ -53,12 +82,8 @@ object NetworkModule {
 
 
     @Provides
-     @Singleton
-     fun provideTokenManager(@ApplicationContext context: Context): TokenManager {
-         return TokenManager(context)
-     }
-
-    @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService = retrofit.create(ApiService::class.java)
+    fun provideTokenManager(@ApplicationContext context: Context): TokenManager {
+        return TokenManager(context)
+    }
 }

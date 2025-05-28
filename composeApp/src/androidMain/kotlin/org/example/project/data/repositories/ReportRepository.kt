@@ -7,9 +7,10 @@ import org.example.project.model.entities.Report
 import org.example.project.model.request.ReportRequest
 import org.example.project.model.request.StatusLaporanRequest
 import javax.inject.Inject
+import javax.inject.Named
 
 class ReportRepository @Inject constructor(
-    private val apiService: ApiService,
+    @Named("internal") private val apiService: ApiService,
 ) {
 
     suspend fun getReports(): Response<List<Report>> = apiService.getReports()

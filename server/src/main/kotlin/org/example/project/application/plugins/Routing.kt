@@ -79,6 +79,7 @@ fun Application.configureRouting() {
                                 HttpStatusCode.Created,
                                 successResponse(response, "Laporan berhasil dibuat")
                             )
+                            print("berhasol bos")
                         }
                         route("/{id}") {
                             get {

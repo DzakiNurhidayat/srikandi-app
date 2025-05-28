@@ -11,11 +11,12 @@ import org.example.project.data.remote.ApiService
 import org.example.project.data.remote.AuthDataSource
 import org.example.project.data.remote.UserDataSource
 import javax.inject.Inject
+import javax.inject.Named
 
 class UserRepository @Inject constructor(
     private val authDataSource: AuthDataSource,
     private val userDataSource: UserDataSource,
-    private val apiService: ApiService
+    @Named("internal") private val apiService: ApiService
 ) {
     fun getUserProfileData(): Flow<Result<UserProfile>> = flow {
         val currentUser = authDataSource.getCurrentUser()

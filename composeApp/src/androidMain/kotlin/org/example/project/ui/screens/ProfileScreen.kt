@@ -315,7 +315,7 @@ fun ProfileScreenContent(
             },
             onDismiss = { showLogoutDialog = false },
             dismissText = "Batal",
-            icon = Icons.Default.ExitToApp
+            icon = Icons.AutoMirrored.Filled.ExitToApp
         )
     }
 

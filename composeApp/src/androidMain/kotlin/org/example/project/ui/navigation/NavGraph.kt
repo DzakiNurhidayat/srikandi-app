@@ -45,6 +45,7 @@ sealed class Screen(val route: String) {
     object UnderDev : Screen("under_development")
     object Kalendar : Screen("kalendar")
     object Profil : Screen("profil")
+    object Artikel : Screen("artikel")
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -159,6 +160,10 @@ fun navGraph(navController: NavHostController) {
             ProfileScreen(
                 navController = navController,
                 authViewModel
+            )
+        }
+        composable(Screen.Artikel.route) {
+            NewsScreen(
             )
         }
     }
