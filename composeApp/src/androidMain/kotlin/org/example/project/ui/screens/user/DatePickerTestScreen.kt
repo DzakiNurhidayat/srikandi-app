@@ -10,6 +10,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavHostController
+import org.example.project.ui.components.BottomNavigationBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,31 +75,37 @@ fun DatePickerTextField(
 }
 
 @Composable
-fun SimpleDatePickerScreen() {
+fun SimpleDatePickerScreen(navController: NavHostController) {
     var selectedDate by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Pilih Tanggal",
-            style = MaterialTheme.typography.titleLarge
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        DatePickerTextField(
-            modifier = Modifier.weight(1f),
-            onDateSelected = { date ->
-                selectedDate = date
-            }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Tanggal Terpilih: $selectedDate",
-            style = MaterialTheme.typography.bodyMedium
-        )
+    val snackbarHostState = remember { SnackbarHostState() }
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = { BottomNavigationBar(navController) },
+        containerColor = Color.White
+    ) { padding ->
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(16.dp)
+//        ) {
+//            Text(
+//                text = "Pilih Tanggal",
+//                style = MaterialTheme.typography.titleLarge
+//            )
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            DatePickerTextField(
+//                modifier = Modifier.weight(1f),
+//                onDateSelected = { date ->
+//                    selectedDate = date
+//                }
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//            Text(
+//                text = "Tanggal Terpilih: $selectedDate",
+//                style = MaterialTheme.typography.bodyMedium
+//            )
+//        }
     }
 }

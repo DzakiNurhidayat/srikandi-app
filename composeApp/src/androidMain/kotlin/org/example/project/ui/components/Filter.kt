@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import org.example.project.data.model.Filter
 import org.example.project.utils.shadow
 
-
 @Composable
 fun FilterChip(
     filter: Filter,

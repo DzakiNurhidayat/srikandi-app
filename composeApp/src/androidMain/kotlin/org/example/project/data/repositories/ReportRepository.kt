@@ -8,6 +8,7 @@ import org.example.project.model.request.StatusLaporanRequest
 import org.example.project.model.request.ReportRequest
 import javax.inject.Inject
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 
 class ReportRepository @Inject constructor(private val apiService: ApiService) {
     suspend fun getReports(): Response<List<Report>> = apiService.getReports()

@@ -78,6 +78,9 @@ kotlin {
             implementation(libs.composeui.tooling.preview)
             implementation(libs.androidx.compose.foundation)
             implementation(libs.coil)
+            implementation(libs.media3.exoplayer)
+            implementation(libs.media3.ui)
+
 
             // Firebase
             implementation(project.dependencies.platform(libs.firebase.bom))

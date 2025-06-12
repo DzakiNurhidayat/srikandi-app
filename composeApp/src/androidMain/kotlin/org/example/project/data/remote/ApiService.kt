@@ -1,6 +1,7 @@
 package org.example.project.data.remote
 
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import org.example.project.model.Response
 import org.example.project.model.entities.Product
 import org.example.project.model.entities.Report

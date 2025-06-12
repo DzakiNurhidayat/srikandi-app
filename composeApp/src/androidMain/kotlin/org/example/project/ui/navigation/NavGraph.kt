@@ -26,7 +26,7 @@ sealed class Screen(val route: String) {
     object ProductList : Screen("product_list")
     object DashboardKetua : Screen("dashboard_ketua")
     object VerifikasiKasus : Screen("verifikasi_kasus")
-    object FormPelaporan : Screen("form_pelaporan") // ⬅ Tambahkan ini
+    object FormPelaporan : Screen("form_pelaporan")
     object KirimLaporan : Screen("kirim-laporan")
     object DashboardUser : Screen("dashboard_user")
     object EditLaporan : Screen("edit_laporan/{id}")
@@ -37,7 +37,7 @@ sealed class Screen(val route: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun navGraph(navController: NavHostController) {
-    NavHost(navController, startDestination = Screen.DashboardUser.route) {
+    NavHost(navController, startDestination = Screen.Kalendar.route) {
         composable(Screen.ProductList.route) {
             ProductScreen()
         }
@@ -79,7 +79,7 @@ fun navGraph(navController: NavHostController) {
             TambahLaporanScreen(navController = navController)
         }
         composable(Screen.Kalendar.route) {
-            SimpleDatePickerScreen()
+            SimpleDatePickerScreen(navController = navController)
         }
         composable(Screen.DashboardUser.route) {
             UserDashboardScreen(navController)

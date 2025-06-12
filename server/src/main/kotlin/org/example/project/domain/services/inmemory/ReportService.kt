@@ -73,11 +73,14 @@ class ReportService(
 
         // Hapus bukti lama dan tambahkan bukti baru
         evidenceRepository.deleteByReportId(id)
+        val now = JavaLocalDateTime.now()
         request.bukti.forEachIndexed { index, filePath ->
             val newEvidence = Evidence(
                 reportId = id,
                 buktiKe = index + 1,
-                filePath = filePath
+                filePath = filePath,
+                createdAt = now,
+                updatedAt = now
             )
             evidenceRepository.create(newEvidence)
         }
@@ -116,6 +119,7 @@ class ReportService(
     override suspend fun getById(id: Int): Report? {
         val report = super.getById(id) ?: return null
         val evidences = evidenceRepository.getByReportId(id)
+        println("Evidences for report $id: $evidences")
         return report.copy(bukti = evidences.mapNotNull { it.filePath })
     }
 

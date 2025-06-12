@@ -1,49 +1,25 @@
 package org.example.project.ui.screens.user
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import org.example.project.R
-import org.example.project.common.enums.JenisKekerasan
 import org.example.project.common.enums.StatusLaporan
-import org.example.project.data.model.Filter
-import org.example.project.model.request.ReportRequest
-import org.example.project.model.entities.Report
-import org.example.project.ui.components.CustomButton
-import org.example.project.ui.components.FilterChip
-import org.example.project.ui.screens.ketua.TotalCase
+import org.example.project.ui.components.TopNavigationBar
+import org.example.project.ui.components.BottomNavigationBar
 import org.example.project.ui.viewmodel.ReportViewModel
-import org.example.project.utils.shadow
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.*
+import org.example.project.ui.components.UserFilterTabs
+import org.example.project.ui.components.UserReportCard
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -68,13 +44,9 @@ fun UserDashboardScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
+            TopNavigationBar()
             HeaderUserSection()
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(
-                thickness = 2.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-            )
-            TotalCase(formattedReports.size, "Laporan Terkirim")
             UserFilterTabs(
                 selectedFilter = selectedFilter,
                 modifier = Modifier.fillMaxWidth(),
@@ -110,235 +82,12 @@ fun UserDashboardScreen(
 
 @Composable
 fun HeaderUserSection() {
-    Column(Modifier.padding(24.dp, 32.dp, 24.dp, 12.dp)) {
-        Text(text = "Selamat Pagi,", style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = "Restu Akbar",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+    Column(Modifier.padding(24.dp, 0.dp, 24.dp, 12.dp)) {
         Text(
             text = "Setiap suara memiliki kekuatan. Jangan takut untuk berbicara dan mencari bantuan.",
-            fontSize = 12.sp,
+            fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Justify
         )
-    }
-}
-
-@Composable
-fun UserFilterTabs(
-    selectedFilter: MutableState<String>,
-    modifier: Modifier = Modifier,
-    chipWidth: Dp = 120.dp,
-    chipHeight: Dp = 32.dp
-) {
-    val filters = listOf("Laporan", "Undangan")
-    LazyRow(
-        modifier = modifier
-            .padding(vertical = 4.dp, horizontal = 24.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        items(filters) { filter ->
-            val isSelected = selectedFilter.value == filter
-            FilterChip(
-                filter = Filter(
-                    name = filter,
-                    enabled = mutableStateOf(isSelected)
-                ),
-                onSelected = {
-                    selectedFilter.value = filter
-                },
-                modifier = Modifier
-                    .width(chipWidth)
-                    .height(chipHeight)
-                    .padding(end = 5.dp),
-                shape = RoundedCornerShape(20),
-            )
-        }
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun UserReportCard(
-    navController: NavHostController,
-    report: Report,
-    viewModel: ReportViewModel = hiltViewModel()
-) {
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
-    val formattedDate = remember(report.tanggalKejadian) {
-        report.tanggalKejadian.format(DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(Locale("id")))
-    }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = {
-                Text(
-                    text = "Konfirmasi Hapus",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            },
-            text = {
-                Text(
-                    text = "Apakah Anda yakin ingin menghapus laporan ini?",
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Justify,
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteReport(report.id!!)
-                        showDeleteDialog = false
-                    }
-                ) {
-                    Text(
-                        "Hapus",
-                        color = Color.Red,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDeleteDialog = false }
-                ) {
-                    Text(
-                        "Batal",
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            },
-            containerColor = Color.White,
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp)
-            .shadow(
-                color = Color.Black.copy(alpha = 0.2f),
-                borderRadius = 20.dp,
-                blurRadius = 15.dp,
-                offsetX = 2.dp,
-                offsetY = 8.dp,
-                spread = 0.dp
-            ),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .clickable {
-                    navController.navigate("edit_laporan/${report.id}")
-                }
-        ) {
-            // Row: Image and Text (Name + Department/Date)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.laporan),
-                    contentDescription = "Laporan",
-                    modifier = Modifier
-                        .height(60.dp)
-                        .width(60.dp)
-                )
-                Column {
-                    // Row 1: Name
-                    Text(
-                        text = "Restu Akbar",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color.Black
-                    )
-                    Spacer(modifier = Modifier.height(1.dp))
-                    // Row 2: Department and Date
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Teknik Komputer dan Informatika ‘23",
-                            color = Color.Gray,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Normal
-                        )
-                        Text(
-                            text = formattedDate,
-                            color = Color.Gray,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Normal
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            // Divider
-            HorizontalDivider(
-                color = Color.Gray.copy(alpha = 0.2f),
-                thickness = 1.dp,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            // Description
-            Text(
-                text = report.deskripsi,
-                color = Color.Black,
-                fontSize = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            // Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        navController.navigate("edit_laporan/${report.id}")
-                    },
-                    modifier = Modifier
-                        .weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.Gray),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "Edit Laporan",
-                        color = Color(0xFF666666),
-                        fontSize = 14.sp
-                    )
-                }
-                OutlinedButton(
-                    onClick = { showDeleteDialog = true },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.Red),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "Hapus Laporan",
-                        color = Color.Red,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-        }
     }
 }

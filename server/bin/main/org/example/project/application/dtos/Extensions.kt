@@ -37,11 +37,12 @@ fun ReportRequest.toEntity(): Report {
 }
 
 fun EvidenceRequest.toEntity(buktiKe: Int): Evidence {
+    val now = LocalDateTime.now()
     return Evidence(
         reportId = this.reportId,
         buktiKe = buktiKe,
         filePath = this.filePath,
-        createdAt = LocalDateTime.now(),
-        updatedAt = LocalDateTime.now()
+        createdAt = now,
+        updatedAt = now
     )
 }

@@ -90,7 +90,7 @@ fun DashboardScreen(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
         ) {
-            HeaderSection()
+            HeaderKetuaSection()
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.secondary)
             TotalCase(filteredReports.size, "Total Kasus")
@@ -115,22 +115,12 @@ fun DashboardScreen(
     }
 }
 
-
 @Composable
-fun HeaderSection() {
-    Column(Modifier.padding(24.dp, 32.dp, 24.dp, 12.dp)) {
-        Text(text = "Selamat Bertugas,", style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(1.dp))
+fun HeaderKetuaSection() {
+    Column(Modifier.padding(24.dp, 0.dp, 24.dp, 12.dp)) {
         Text(
-            text = "Haikal Al Jufri",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Keberanian kita adalah harapan bagi mereka yang tak bersuara. Mari terus bekerja dengan semangat untuk menciptakan lingkungan yang aman di dunia pendidikan",
-            fontSize = 12.sp,
+            text = "Keberanian kita adalah harapan bagi mereka yang tak bersuara. Mari terus bekerja dengan semangat untuk menciptakan lingkungan yang aman di dunia pendidikan.",
+            fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Justify
         )

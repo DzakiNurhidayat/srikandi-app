@@ -2,7 +2,8 @@ package org.example.project.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val surfaceVariant = Color(0xFF8D7575)
+val surfaceVariant = Color(0xFF1E88E5)
+val altSurfaceVariant = Color(0xFF004499)
 val onSurfaceVariant = Color.White
 val surface = Color.White
 val onSurface = Color.Black

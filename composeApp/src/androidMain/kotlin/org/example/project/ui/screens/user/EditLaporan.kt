@@ -1,10 +1,19 @@
 package org.example.project.ui.screens.user
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -16,24 +25,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import kotlinx.coroutines.launch
+import org.example.project.R
 import org.example.project.common.enums.JenisKekerasan
 import org.example.project.common.enums.StatusLaporan
 import org.example.project.model.entities.Report
 import org.example.project.model.request.ReportRequest
+import org.example.project.ui.components.DatePickerTextField
+import org.example.project.ui.components.TopNavigationBarB
 import org.example.project.ui.viewmodel.ReportViewModel
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import org.example.project.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -50,6 +61,20 @@ fun EditLaporanScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var isLoading by remember { mutableStateOf(false) }
     var isInitialLoading by remember { mutableStateOf(true) }
+    val baseUrl = remember { "http://192.168.1.2:8080/" }
+
+    fun getEvidenceUrl(filePath: String, reportId: Int): String {
+        // Log input filePath dan reportId
+        Log.d("EvidenceUrl", "Input filePath: $filePath, reportId: $reportId")
+
+        return if (filePath.startsWith("http") || filePath.startsWith("https://")) {
+            Log.d("EvidenceUrl", "FilePath is already an HTTP URL: $filePath")
+            filePath
+        } else {
+            Log.d("EvidenceUrl", "Final evidence URL: $filePath")
+            baseUrl + filePath
+        }
+    }
 
     // Load report data
     LaunchedEffect(reportId) {
@@ -156,6 +181,18 @@ fun EditLaporanScreen(
                     .background(Color.White)
                     .verticalScroll(rememberScrollState())
             ) {
+                TopNavigationBarB(
+                    text = "Detail Kejadian",
+                    navController = navController,
+                    onDeleteClick = {
+                        reportId?.let { reportViewModel.deleteReport(it) }
+                    }
+                )
+                HorizontalDivider(
+                    color = Color.Gray.copy(alpha = 0.3f),
+                    thickness = 2.dp,
+                )
+
                 Spacer(modifier = Modifier.height(24.dp))
                 Image(
                     painter = painterResource(id = R.drawable.srikandi),
@@ -212,44 +249,33 @@ fun EditLaporanScreen(
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = tempatKejadian,
-                        onValueChange = { tempatKejadian = it },
-                        label = { Text("Lokasi", color = Color.Black) },
-                        modifier = Modifier.weight(1f),
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = Color.Black)
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedBorderColor = Color.Black,
-                            unfocusedBorderColor = Color.Gray
-                        )
+                OutlinedTextField(
+                    value = tempatKejadian,
+                    onValueChange = { tempatKejadian = it },
+                    label = { Text("Lokasi", color = Color.Black) },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = Color.Black)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Gray
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = waktuKejadian,
-                        onValueChange = { waktuKejadian = it},
-                        label = { Text("Tanggal", color = Color.Black) },
-                        modifier = Modifier.weight(1f),
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.DateRange, contentDescription = null, tint = Color.Black)
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedBorderColor = Color.Black,
-                            unfocusedBorderColor = Color.Gray
-                        )
-                    )
-                }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+                DatePickerTextField(
+                    onDateSelected = { date ->
+                        waktuKejadian = date // Format YYYY-MM-DD untuk pengiriman
+                    }
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
                 Text("Bukti Pendukung", color = Color.Black)
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 // Existing evidence
                 if (!report?.bukti.isNullOrEmpty()) {
                     Text(
@@ -257,43 +283,37 @@ fun EditLaporanScreen(
                         fontSize = 14.sp,
                         color = Color.Black
                     )
-                    LazyRow {
-                        items(report?.bukti ?: emptyList()) { filePath ->
-                            Box(
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .size(70.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color.LightGray)
-                            ) {
-                                val fileExtension = filePath.substringAfterLast('.', "").lowercase()
-                                when {
-                                    fileExtension in listOf("jpg", "jpeg", "png") -> {
-                                        Image(
-                                            // Sementara masih assign ip manual, nanti akan disesuaikan kembali
-                                            painter = rememberAsyncImagePainter("10.0.2.2:8080/${filePath}"),
-//                                            painter = rememberAsyncImagePainter("http://192.168.1.9:8080/${filePath}"),
-                                            contentDescription = null,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                    }
-                                    fileExtension in listOf("mp4", "mov", "avi") -> {
-                                        Icon(
-                                            painter = painterResource(id = android.R.drawable.ic_media_play),
-                                            contentDescription = "Video",
-                                            tint = Color.White,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
-                                    fileExtension in listOf("mp3", "wav", "ogg") -> {
-                                        Icon(
-                                            painter = painterResource(id = android.R.drawable.ic_media_ff),
-                                            contentDescription = "Audio",
-                                            tint = Color.White,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 150.dp)
+                    ) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(5),
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(report?.bukti ?: emptyList()) { filePath ->
+                                val uri = Uri.parse(getEvidenceUrl(filePath, reportId))
+                                Log.d("FileEditPreview", "Loading URI: $uri")
+                                val type = when {
+                                    filePath.endsWith(".jpg", ignoreCase = true) || 
+                                    filePath.endsWith(".jpeg", ignoreCase = true) || 
+                                    filePath.endsWith(".png", ignoreCase = true) -> "image"
+                                    filePath.endsWith(".mp4", ignoreCase = true) || 
+                                    filePath.endsWith(".mov", ignoreCase = true) || 
+                                    filePath.endsWith(".avi", ignoreCase = true) -> "video"
+                                    filePath.endsWith(".mp3", ignoreCase = true) || 
+                                    filePath.endsWith(".wav", ignoreCase = true) || 
+                                    filePath.endsWith(".ogg", ignoreCase = true) -> "audio"
+                                    else -> "unknown"
                                 }
+                                FileEditPreview(
+                                    EvidenceUrl = filePath,
+                                    uri = uri,
+                                    onRemove = { /* Tidak ada hapus untuk bukti yang sudah ada */ },
+                                )
                             }
                         }
                     }
@@ -305,25 +325,42 @@ fun EditLaporanScreen(
                     fontSize = 14.sp,
                     color = Color.Black
                 )
-                LazyRow {
-                    items(uploadedFiles) { uri ->
-                        FileEditPreview(uri = uri, onRemove = { uploadedFiles.remove(uri) })
-                    }
-
-                    item {
-                        IconButton(
-                            onClick = {
-                                launcher.launch(arrayOf("image/*", "video/*", "audio/*"))
-                            },
-                            modifier = Modifier
-                                .size(70.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.LightGray)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = android.R.drawable.ic_menu_upload),
-                                contentDescription = "Upload"
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 150.dp)
+                ) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(5),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(uploadedFiles) { uri ->
+                            FilePreview(
+                                uri = uri,
+                                onRemove = { uploadedFiles.remove(uri) },
+                                onPreviewClick = { /* Ditangani di FilePreview */ }
                             )
+                        }
+
+                        item {
+                            IconButton(
+                                onClick = {
+                                    launcher.launch(arrayOf("image/*", "video/*", "audio/*"))
+                                },
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White)
+                                    .border(1.dp, Color.Black, RoundedCornerShape(8.dp))
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = android.R.drawable.ic_menu_upload),
+                                    contentDescription = "Upload",
+                                    tint = Color.Black
+                                )
+                            }
                         }
                     }
                 }
@@ -357,65 +394,267 @@ fun EditLaporanScreen(
 
 @Composable
 fun FileEditPreview(
+    EvidenceUrl: String,
     uri: Uri,
     onRemove: () -> Unit
 ) {
+    val ktorStaticBaseUrl = "http://192.168.1.2:8080"
     val context = LocalContext.current
-    val type = remember(uri) {
-        context.contentResolver.getType(uri) ?: "unknown"
+
+    // Log the input parameters
+    Log.d("FileEditPreview", "Processing evidence - URL: $EvidenceUrl, URI: $uri")
+
+    // Deteksi tipe file untuk URL atau URI
+    val type = remember(EvidenceUrl, uri) {
+        val detectedType = when {
+            EvidenceUrl.isNotBlank() -> {
+                val fullUrl = if (EvidenceUrl.startsWith("http://") || EvidenceUrl.startsWith("https://")) {
+                    EvidenceUrl // Already a full URL
+                } else {
+                    "$ktorStaticBaseUrl/$EvidenceUrl" // Prepend base URL
+                }
+                val path = fullUrl.substringAfterLast("/", "")
+                Log.d("FileEditPreview", "Detecting type from path: $path")
+                when {
+                    path.endsWith(".jpg", true) || path.endsWith(".jpeg", true) || path.endsWith(".png", true) -> {
+                        val mimeType = "image/${path.substringAfterLast('.', "jpeg").lowercase()}"
+                        Log.d("FileEditPreview", "Detected image type: $mimeType")
+                        mimeType
+                    }
+                    path.endsWith(".mp4", true) -> {
+                        Log.d("FileEditPreview", "Detected video type: video/mp4")
+                        "video/mp4"
+                    }
+                    path.endsWith(".mov", true) -> {
+                        Log.d("FileEditPreview", "Detected video type: video/quicktime")
+                        "video/quicktime"
+                    }
+                    path.endsWith(".avi", true) -> {
+                        Log.d("FileEditPreview", "Detected video type: video/x-msvideo")
+                        "video/x-msvideo"
+                    }
+                    path.endsWith(".mp3", true) -> {
+                        Log.d("FileEditPreview", "Detected audio type: audio/mpeg")
+                        "audio/mpeg"
+                    }
+                    path.endsWith(".wav", true) -> {
+                        Log.d("FileEditPreview", "Detected audio type: audio/wav")
+                        "audio/wav"
+                    }
+                    path.endsWith(".ogg", true) -> {
+                        Log.d("FileEditPreview", "Detected audio type: audio/ogg")
+                        "audio/ogg"
+                    }
+                    else -> {
+                        val fallbackType = if (path.contains(".")) "image/${path.substringAfterLast('.').lowercase()}"
+                        else "application/octet-stream"
+                        Log.d("FileEditPreview", "Using fallback type: $fallbackType")
+                        fallbackType
+                    }
+                }
+            }
+            uri != Uri.EMPTY -> {
+                val mimeType = context.contentResolver.getType(uri)
+                Log.d("FileEditPreview", "Detected MIME type from URI: $mimeType")
+                mimeType ?: when {
+                    uri.lastPathSegment?.endsWith(".jpg", true) == true ||
+                            uri.lastPathSegment?.endsWith(".jpeg", true) == true ||
+                            uri.lastPathSegment?.endsWith(".png", true) == true -> {
+                        val imageType = "image/${uri.lastPathSegment?.substringAfterLast('.', "jpeg")?.lowercase()}"
+                        Log.d("FileEditPreview", "Detected image type from URI: $imageType")
+                        imageType
+                    }
+                    uri.lastPathSegment?.endsWith(".mp4", true) == true -> {
+                        Log.d("FileEditPreview", "Detected video type from URI: video/mp4")
+                        "video/mp4"
+                    }
+                    uri.lastPathSegment?.endsWith(".mov", true) == true -> {
+                        Log.d("FileEditPreview", "Detected video type from URI: video/quicktime")
+                        "video/quicktime"
+                    }
+                    uri.lastPathSegment?.endsWith(".avi", true) == true -> {
+                        Log.d("FileEditPreview", "Detected video type from URI: video/x-msvideo")
+                        "video/x-msvideo"
+                    }
+                    uri.lastPathSegment?.endsWith(".mp3", true) == true -> {
+                        Log.d("FileEditPreview", "Detected audio type from URI: audio/mpeg")
+                        "audio/mpeg"
+                    }
+                    uri.lastPathSegment?.endsWith(".wav", true) == true -> {
+                        Log.d("FileEditPreview", "Detected audio type from URI: audio/wav")
+                        "audio/wav"
+                    }
+                    uri.lastPathSegment?.endsWith(".ogg", true) == true -> {
+                        Log.d("FileEditPreview", "Detected audio type from URI: audio/ogg")
+                        "audio/ogg"
+                    }
+                    else -> {
+                        Log.d("FileEditPreview", "Using fallback type for URI: application/octet-stream")
+                        "application/octet-stream"
+                    }
+                }
+            }
+            else -> {
+                Log.w("FileEditPreview", "No type detected - using unknown")
+                "unknown"
+            }
+        }
+        Log.d("FileEditPreview", "Final detected type: $detectedType")
+        detectedType
     }
+
+    var showPreviewDialog by remember { mutableStateOf(false) }
+    val videoThumbnail by produceState<Bitmap?>(initialValue = null, uri, type) {
+        if (type.startsWith("video")) {
+            try {
+                Log.d("FileEditPreview", "Attempting to get video thumbnail for URI: $uri")
+                value = getVideoThumbnail(context, uri)
+                if (value != null) {
+                    Log.d("FileEditPreview", "Successfully loaded video thumbnail")
+                } else {
+                    Log.w("FileEditPreview", "Failed to load video thumbnail - returned null")
+                }
+            } catch (e: Exception) {
+                Log.e("FileEditPreview", "Error getting video thumbnail: ${e.message}", e)
+                value = null
+            }
+        }
+    }
+    val isAudio = type.startsWith("audio")
+
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(uri)
+            .crossfade(true)
+            .error(android.R.drawable.stat_notify_error)
+            .fallback(android.R.drawable.ic_menu_gallery)
+            .build(),
+        onError = { error ->
+            Log.e("FileEditPreview", "Image loading failed for URI $uri: ${error.result.throwable?.message}")
+        }
+    )
 
     Box(
         modifier = Modifier
-            .padding(end = 8.dp)
-            .size(70.dp)
+            .size(60.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .background(if (isAudio) Color.White else Color.LightGray)
+            .border(1.dp, Color.Black, RoundedCornerShape(8.dp))
+            .clickable { 
+                Log.d("FileEditPreview", "Opening preview dialog for type: $type")
+                showPreviewDialog = true 
+            },
         contentAlignment = Alignment.Center
     ) {
-        IconButton(
-            onClick = onRemove,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(20.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Close,
-                contentDescription = "Hapus",
-                modifier = Modifier.size(16.dp)
-            )
-        }
-
         when {
             type.startsWith("image") -> {
-                Image(
-                    painter = rememberAsyncImagePainter(uri),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(8.dp))
-                )
+                when (painter.state) {
+                    is AsyncImagePainter.State.Success -> {
+                        Log.d("FileEditPreview", "Successfully loaded image")
+                        Image(
+                            painter = painter,
+                            contentDescription = "Pratinjau Gambar",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    is AsyncImagePainter.State.Error -> {
+                        Log.e("FileEditPreview", "Image loading error state: ${painter.state}")
+                        Icon(
+                            painter = painterResource(id = android.R.drawable.stat_notify_error),
+                            contentDescription = "Gagal memuat gambar",
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.Red
+                        )
+                    }
+                    else -> {
+                        Log.d("FileEditPreview", "Loading image...")
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    }
+                }
             }
             type.startsWith("video") -> {
+                videoThumbnail?.let { thumbnail ->
+                    Log.d("FileEditPreview", "Displaying video thumbnail")
+                    Image(
+                        bitmap = thumbnail.asImageBitmap(),
+                        contentDescription = "Pratinjau Video",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } ?: run {
+                    Log.w("FileEditPreview", "No video thumbnail available")
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Gray)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = android.R.drawable.stat_notify_error),
+                            contentDescription = "Gagal memuat thumbnail",
+                            modifier = Modifier.size(24.dp).align(Alignment.Center),
+                            tint = Color.Red
+                        )
+                    }
+                }
                 Icon(
                     painter = painterResource(id = android.R.drawable.ic_media_play),
-                    contentDescription = "Video",
-                    modifier = Modifier.size(24.dp)
+                    contentDescription = "Putar",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.Center),
+                    tint = Color.White
                 )
             }
             type.startsWith("audio") -> {
+                Log.d("FileEditPreview", "Displaying audio icon")
                 Icon(
                     painter = painterResource(id = android.R.drawable.ic_media_ff),
                     contentDescription = "Audio",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.Black
                 )
             }
             else -> {
-                Text(
-                    text = uri.lastPathSegment?.take(6) ?: "File",
-                    fontSize = 10.sp
+                Log.w("FileEditPreview", "Unsupported type: $type")
+                Icon(
+                    painter = painterResource(id = android.R.drawable.ic_menu_info_details),
+                    contentDescription = "Tidak Diketahui",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.Black
                 )
             }
         }
+
+        Icon(
+            imageVector = Icons.Rounded.Close,
+            contentDescription = "Hapus",
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(2.dp)
+                .size(16.dp)
+                .background(Color.White.copy(alpha = 0.7f), CircleShape)
+                .clickable { 
+                    Log.d("FileEditPreview", "Removing evidence")
+                    onRemove() 
+                },
+            tint = Color.Black
+        )
     }
-} 
+
+    if (showPreviewDialog) {
+        Log.d("FileEditPreview", "Showing media preview dialog")
+        MediaPreviewDialog(
+            uri = uri,
+            type = type,
+            onDismiss = { 
+                Log.d("FileEditPreview", "Closing media preview dialog")
+                showPreviewDialog = false 
+            }
+        )
+    }
+}
