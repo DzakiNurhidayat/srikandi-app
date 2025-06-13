@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SRIKANDI APP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+    <nav class="bg-white py-4 border-b border-gray-100 shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a class="text-2xl font-bold text-gray-800" href="#">SRIKANDI</a>
+
+            <div class="flex items-center gap-3 lg:hidden">
+                <a class="btn bg-indigo-500 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-indigo-600 transition duration-300 ease-in-out"
+                    href="#">Download App</a>
+                <button class="text-gray-600 text-3xl focus:outline-none" aria-label="Toggle mobile menu"
+                    aria-expanded="false" id="navbarToggler">
+                    &#9776;
+                </button>
+            </div>
+
+            <div class="hidden lg:flex flex-grow justify-center items-center gap-12">
+                <a href="#home"
+                    class="text-gray-600 font-semibold hover:text-indigo-500 transition duration-300">Home</a>
+                <a href="#features"
+                    class="text-gray-600 font-semibold hover:text-indigo-500 transition duration-300">Features</a>
+                <a href="#contact"
+                    class="text-gray-600 font-semibold hover:text-indigo-500 transition duration-300">Contact</a>
+            </div>
+
+            <div class="hidden lg:block">
+                <a class="btn bg-indigo-500 text-white px-6 py-2 rounded-full text-base font-semibold hover:bg-indigo-600 transition duration-300 ease-in-out"
+                    href="#">Download App</a>
+            </div>
+        </div>
+
+        <div id="mobileMenu"
+            class="hidden lg:hidden absolute top-full right-4 mt-2 bg-white shadow-lg rounded-xl w-48 py-2 z-40">
+            <a href="#home"
+                class="block px-6 py-3 text-gray-700 font-medium hover:bg-gray-100 hover:text-indigo-500 transition duration-200">Home</a>
+            <a href="#features"
+                class="block px-6 py-3 text-gray-700 font-medium hover:bg-gray-100 hover:text-indigo-500 transition duration-200">Features</a>
+            <a href="#contact"
+                class="block px-6 py-3 text-gray-700 font-medium hover:bg-gray-100 hover:text-indigo-500 transition duration-200">Contact</a>
+        </div>
+    </nav>
+
+    <main class="flex-grow">
+        <section id="home"
+            class="bg-gradient-to-r from-blue-50 to-indigo-100 text-gray-900 py-16 flex items-center min-h-[calc(100vh-6rem)]">
+            <div class="container mx-auto px-4 flex flex-col lg:flex-row items-center gap-12 max-w-6xl">
+                <div class="hero-text text-center lg:text-left flex-1">
+                    <h1 class="text-6xl lg:text-7xl font-extrabold leading-tight mb-4">
+                        SRIKANDI <span class="italic font-normal text-indigo-600">APP</span>
+                    </h1>
+                    <p class="text-lg lg:text-xl text-gray-700 mb-8 max-w-2xl mx-auto lg:mx-0">
+                        Aplikasi resmi kampus untuk mendukung pelaporan dan edukasi terkait lingkungan yang aman dan
+                        bebas kekerasan bersama Satgas PPKPT. Laporkan, dapatkan bantuan, dan tingkatkan kesadaran
+                        bersama.
+                    </p>
+                    <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+                        <a href="#"
+                            class="bg-indigo-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-indigo-700 transition duration-300 shadow-lg">Download
+                            Sekarang</a>
+                        <a href="#features"
+                            class="bg-transparent border border-indigo-600 text-indigo-600 px-8 py-3 rounded-full text-lg font-semibold hover:bg-indigo-50 transition duration-300">Pelajari
+                            Fitur</a>
+                    </div>
+                </div>
+                <div class="hero-phone flex-1 flex justify-center items-start lg:justify-end mt-8 lg:mt-0">
+                    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxAPDw4NDQ8ODg8ODw0ODQ4NDg8QDg4PFREWFhURFRUYHSggGBolGxUVITEhJSkrLi4wFx8zOD8tNygtLisBCgoKDg0OGhAQFy0dHSIrLS0tKystLS0rLS0rLS0tLSstLS0tLSsrLS0tLS0tLS0tKy0tLS0tLS0tLSstLS0tLf/AABEIAQUAwQMBIgACEQEDEQH/xAAcAAACAwEBAQEAAAAAAAAAAAAAAQIGBwUDBAj/xABDEAACAQMBBAcEBgYKAwEAAAAAAQIDBBEFBhIhMQcTQVFhcZEUIoGhIzJScrHBQmKSwtHwFSQzNENTc4KismOz4Rb/xAAZAQEAAwEBAAAAAAAAAAAAAAAAAQIDBAX/xAAgEQEAAgMBAAMAAwAAAAAAAAAAAQIDESExEjJBBBMz/9oADAMBAAIRAxEAPwDTGRY2RYQQhsRAQAACAAABiABgAAMZEYDGIYAMQAMYgAYyIwGAAAAAAIiMRIQhsRAQAACAAAAAAGAhgAxAAxiABgIYDGRGAwEAEshkQAMBDATEwAkJiGIgIAEAAAAAAADAAAAAAAYhgAxAAwEADGIAGAsgA8gLIANiGIkIQxEAEMQAAFZ17auVK5jp2n207+/lHflSjJQpUIfaqzfBc/muKyshZsDwVb2XaWfFPRKKf6MndSkvik0z1jpG0D+tfaXD7ltVl/2AsqiPdM51PWbm3qToXO0un0alN7tSFPTuslCXanhPj4HMntUs+9tb5qnocvk90Jaw0LBQdm5vUpzpWu01zVqU478qasKdGW5nG8lJLKy1y5ZXeWD/APD3D+vrepv7nUw/JkjvYArlfZHUqK37HWa9SceKo6jTp1aNT9Vyisx80j12Z2hlczr2l3R9lv7RpXFDOYSi+VWnLtg+Hlld+SEO8AMAAAABgIAGAhgABkQE2IBEgEMRABAAEak92MpfZTfois9FVNSnrNzNZr1NSqU5yf1uqhCLpry99lkrxzGS74yXyKt0bt0tQ1i2byp+x3cM88yjOM36qIS0QAAkZprvQ5aXV1XuldV6PX1J1Z04whNKpJ5k4t8k228Hyw6DrH9K7vH5Kiv3WaqAFO2O6ObPSq0rm3ncVasqbpJ15wcYRbTeFGK4vC55LiAABn23qVrqmi6lH3VVqz065aX14VF9Gn4Jub+CNBKR0w27lpU68VmdnXtbqHenGoot+k2BYpESNKqqkKdSP1akITXlJJr8RkIMAABiAAGAgAYCACYhiAQhgAhDEAFM0aSo7RQWf7zZXVBrvlSqRqL44XzLmUHW4O21nT7rHuyv6NPPd19HqZPwWcBMNWAAJAAAAAAABy9qLH2mwvbZc61rcQj9903uv1wdQAKP0fXvX6TYTzlxoKjLvzSbp/ulgKj0bx6qGpWLWPYtSu6UF3U5SzF/iW4hAAAAAAAAAAAAQwPRiGRABDEACGIAM+6VZzpxp1Yf4ajcR4f4lGtTa/4ykaAVPpGsHWtVjCwq8X34lRksLxykEw0OnUUlGceUkpLyayiRw9hrzr9L0+q3lytaCk/1oxUZfOLO4SAAAAAAAAAAM809dRtFqtBvheWtpe01xx7iVOXxy5fyi2NFU21qxtdb0e9m1CnXoXlpXqS4RUYrfjl+cjp0trLCc+rhdU3J8F9ZR9WsETMJ+Mz5DrgPyEFQIAAAEwAYCGB6CGIkAgAgIAEAHE2yp5sqkv8AKnRrPyhUTfyydo5e0VxSVvVpVp7vXU6lOKXGTyscFh+oTEbnj5uiCsv6Mduudpd3tu13fSuovlULuZz0T10q+sWy5Kvb3MfFVabTfrA0YkAAAAAAAAAAZ503Wm9p1Gvy9mvKE5v/AMc1KnJesomC21xOEsNtOLafHtR+mukWx9o0jUaWMtW1SrFfrUvpF84GF7IbFV9SuOsUZUrTMalW4a4PeSk4Q+1Li13Lt7nW0baY7alr3R7c1Kum0J1ct+/GLfNwUml+a+BYWRtreFGnCjSioU6cYwhFclFLCRJkxxnadzsgAQQAEGSQwEBA9QAAEIYmAhNnw6xqtO1hv1MtvhCEfrTfh4eJU7rX7qrwjKNFPsprMsfef5YK2vFfWlMVreLBru0NG0TTe/Wa92lHnnscu5FOpSq3FR17iXN5Ue5di8F4EaenZlvSzKXNuWW2+/J0Iw3cZ+Bhe/y47sOGK9dDZKpGnq0YrC9psbiMu+UqVWlKHynUNHMVtdR3Ne0j3sYlWpTX+vCUIr1RtRti+sOT+R/pIAANGIAAAAAAIVaSnGVOXGM4yhJd6aw/xM76Ka+7p3sc5LrbK6urWcW+OY1N7gn2e98jRz81bdQdpreoQjmKlW9ohjhh1YxqNr9r5ET4msbnT9ANEGjD9A6Q7u3qRVWrKvRylKnVe893wb4pm12l1CvSp16TzCrCM4PwaIidpvSapsQ2RZZQAAiA8gIAPcAEAMi2SZ5zYFC2rut+93HypRjFLzW838/kK1o7zTOZq9Tev7jjyqSXo8fkdnTYYxjmcuT16OPlYe6lGD3ZcHjh4rvPCcHVmqdPjKbxFdni34LmfVf2vW0202pxziSOrolpStbdXVaacpU1KdSSxurnuRX85IrHynTS+T+uu/1n23umxsLizu1mToztK85Y4ylCtltLu58Ddc93wMK201pajC7UViNGmuqj24y+LfebBsree0WFjXfOra205fedNb3zydVda486+999dUAAsoAAAAAAAMC6fbN09St7hcFXtYrPa505yT/4ygb6Zt0zW9Nf0ReVqSrU6N8qNWnJZjOnVjlxfZ/hghhmnW1W4qRpUKc6tST92FOLlJ+nZ4n6S2Z0+drY2ttVx1lKlFVMPKU3xaT7cN4Pj2N1LT6kGtPoUrVvjOlGlCnN+LcfrFgmysRHq97TPJebIjYmWZkAshkgMBAB9AgBgIhMmedR4TfcmwMmuZZu68u+rUfrJli0yXIrkeNWUvFnas20so5b+vRp4708JN9jTKNtntHKoo0Yvco0YqKWeDljjJlpleJLjnkvIzfU6br8Iwkt1yxyTfHtyxRNuvi0K/Uq1Sm/q1qNSHHtlwa/M3DoguXPR7aMnmVCVxby/wBtWWP+LR+fZUZUasZbri4vPE2joPuV1OpWyf8AZ3ca6XdGtTWP/Wzoq48jTQAC7IAAAAAAAU3pdsnW0a83frUepuI+G5Ui5P8AZci5Hxa1ZK4tbm2fKvQrUv24OP5gfl/Stdq0HTq0puE4Yw496N52N17+kLSFd4VSLdOqly312rzTTPzZTpyzGKTblyik3JvOMY7+BvnRXo9e0sZe0x6uVar1kabacow3Uk3jk3x4eRSI1LW1omq4MiyTIsuxJiBiyQHkAyID6QACQj4tYrdXb1p91OePNrC+bR9pz9ftZVrWvTh9ZwzFd7i1JL44wRPiY9ZtYUt6TfiWW2pJRw+4rWl1+LXJ5LHTq+7w7Dkt69GHrCEW2sepx9W0dOW9SUVJ8XlZTOlGXHPafXSWVx4tiEbZxtTp7VCVR01GUOLceTid7oKvv67c0v8APsqdTzlRqbn4TLLd6epppLOU01jKfeU7Y2zlp2v2dPGKNw7mlBv7M6TagvKaXwaNcU/jHPG423kAA3coAAAAAAAEAAfljaej7Lqd5Qax1F3culjshKe9D5PPxNT6MdpPaYTtpv36cd+Ofs5w/wAUUnpU0/rNdvI0ffnKNpJxjxe+6MVu4XbjD+Ja+i7Za4tZ1Lq5g6SlTdOnTn/aSy03Jr9FcO3jx9aT61jXw60RkGSZFl2KLENiIAAgJH1gMQAIYAZXtXZ+y3s3FYhU+kj3Yk+K+DyvQ9rW8zFFi6RdP6y2jXS40HiX+nLC+T3fmZ/YXWPdZz3r12Y7bhcLR5X5nSt6bf5nC0+55JFis5cFxKwvL6o0Xg5+o2VOo6cpRW/RqQrUp9sKkJJxkn2cUdan+RzdQfP8UNKxO+StelazTrrDcYVVwlSlJZb74/aR0mYztDSp1qUoVoqa54eezt4cU/Iya/rLfcOqpx3XhOMq7yv902b0ttz5KfGeP1xVvaMPr1qUPvVYR/FnwV9qdOp8J6hYxfc7uhn03j8l76+zH5/xGquOUYfs5/Euzfqett5pMOeo2n+ypv8A/XJ8FfpS0aHB3ql9yhcSXqoH5spXTTTcKbS7HThh/I6tLaFxSULa1TX6TpLL9MBOm41umHSI/VqXFT7lvJZ/aaOVqHTLTlBrTtPvK9V5UXXgo00/tNQcnLy4GXW20V1OcYU6dFSk0oqnTnlttYSW95fyzbdldGq0aMal41O4niTjuxUaPdGKXb3sjZMac3YLZutRdfU9S9/UL2XWT3sN0IPjuLubzxS5JJdhcGxsiyVUWRZJkWBFiY2RAAEBA+4AAkAAAHjfWqrUatGXKrCcH4ZWMmEyzTm0+Di2n5p4N9RjG0llu3N1Hk41qjXk3vL5MzyNsX6+rRrhPBcLOeUjOtGrbs8PvL5pc84xnsOeZ1LojsLDTg8cO44+qv4eHNnat+Xfw5cTmatDCeX3vv4mkSr+qfq3GDWe8yrVo4qSzw4s1DVqmF6md65Hek329panJVyxxxRhgaNnMR70IZaQ6FLODp6fp8uthCKcnUaUEubk3jd9Sky0rVp3RFs5Fb97VgpOLULdyXKX6Ul6pZ8zT5I+XRLBW1tQt1j6OnGMsdsse8/i8s+uRaI1Clp3LzZFk2QZKqDIskyLAgyLJMgwABAB0QAAABgAjLtt47t9X/WjSl5/RxX5GpGZdI8f67F99Gnn9qRnkjjbD9lVtY7lRN8Yt8fA0HRqOYqUHlY7Gik2cfeXDJdtIjHCfGD78NHJeeuuscd+Purm0+7KWfXmcnVKj45UviuR05Tnu8VCtH4KX8GcHU5w4qMpUpcfdm8eifB/AtWyNKnrUuEuTKHfPMn6YLRtBOpx96EvFZiVGrVfKSfnzNqsck9fDKOJYE4YZ9VzTyt9c1z8iFPisM02y0+m0j2d/LzNO6J9NjVuJV5x3vZ4KUG+UaknhPzwpGb2cM4fcb/0e6R7LY095YqV/pqmefvL3V8I49WRHZTadQsjIMmyDNGLzZBnoyDAgyLJshIDzZBk5EGAsgIAOkMAAAGACM26Sf71D/Rh/wB5GlGfdJtt79vV7JQnBvxi8/vFL+NcX2Vi1b4ci1aTOXDivmU+1mWHTK/LicV4dsLW5JLjmL7/AP6jj6pUympKM144PtVz7vE5GoNNP8iIRKj6/Rjx3G4eEuMSqVcrKfNc1zTXei5anzaymvErWoW3DK5risfgdVJYXh8du168zwUMSce5tfwHRlx8zoW9jKrcQhTi5Sq7ijFc3JvdSLKLJ0dbPO9uVGS+hpNVK774p8IfF8PLJviRwtjdno6fbKlwdWb36812z7l4JcPV9p3WXrGmVp3JMgybIssqgyDPRkWgPNkJHq0QkgPGRBnpIgwIAMAOihgAAAAAFX6Q6KlaKT5wqxa+KaYARbxen2hmFKWHg7VjVaaADju76O5Co2sM52oZS4MAKQSq97JtvJzprPBgBvDCzizoqNZxXLe/E1roo0Sm51LyXvTpKNKkmuEW1lz88cPUANY9ZW+stPAQGjECYABFkWAARZCQwA8pEGAAQwAAB//Z"
+                        alt="Aplikasi SRIKANDI Tampilan HP"
+                        class="max-h-[500px] w-auto object-contain shadow-2xl rounded-3xl border-4 border-indigo-200" />
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="py-20 bg-white">
+            <div class="container mx-auto px-4 max-w-6xl">
+                <h2 class="text-4xl font-bold text-center text-gray-900 mb-12">Fitur Utama SRIKANDI APP</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                    <div
+                        class="bg-gray-50 rounded-xl shadow-lg p-8 flex flex-col items-center text-center hover:shadow-xl transition duration-300">
+                        <div class="text-indigo-500 text-5xl mb-4">🚨</div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Pelaporan Kekerasan</h3>
+                        <p class="text-gray-600 text-base">Laporkan insiden kekerasan kampus dengan cepat dan aman.
+                            Identitas Anda dijaga kerahasiaannya untuk memastikan kenyamanan dan keamanan pelapor.</p>
+                    </div>
+
+                    <div
+                        class="bg-gray-50 rounded-xl shadow-lg p-8 flex flex-col items-center text-center hover:shadow-xl transition duration-300">
+                        <div class="text-indigo-500 text-5xl mb-4">🆘</div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Dukungan Darurat Cepat</h3>
+                        <p class="text-gray-600 text-base">Akses langsung kontak darurat kampus seperti konseling,
+                            keamanan, dan layanan kesehatan untuk bantuan segera di situasi kritis.</p>
+                    </div>
+
+                    <div
+                        class="bg-gray-50 rounded-xl shadow-lg p-8 flex flex-col items-center text-center hover:shadow-xl transition duration-300">
+                        <div class="text-indigo-500 text-5xl mb-4">📚</div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Pusat Informasi & Edukasi</h3>
+                        <p class="text-gray-600 text-base">Dapatkan informasi penting mengenai jenis-jenis kekerasan,
+                            cara pencegahan, hak-hak korban, dan prosedur pelaporan yang jelas.</p>
+                    </div>
+
+                    <div
+                        class="bg-gray-50 rounded-xl shadow-lg p-8 flex flex-col items-center text-center hover:shadow-xl transition duration-300">
+                        <div class="text-indigo-500 text-5xl mb-4">📈</div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Pantau Status Laporan</h3>
+                        <p class="text-gray-600 text-base">Lacak perkembangan laporan Anda secara transparan. Dapatkan
+                            pembaruan status dan tindak lanjut dari tim penanganan kasus kampus.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-blue-50 py-16 flex-shrink-0">
+            <div
+                class="info-box container mx-auto px-4 bg-indigo-100 rounded-3xl p-8 lg:p-12 shadow-xl relative overflow-hidden max-w-6xl">
+                <svg class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 opacity-20"
+                    width="400" height="160" viewBox="0 0 400 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 80 Q100 20 180 80 T340 80" stroke="rgba(0,0,0,0.1)" stroke-width="6"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M60 80 Q140 20 220 80 T380 80" stroke="rgba(0,0,0,0.1)" stroke-width="6"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+
+                <div class="info-content max-w-full lg:max-w-xl mx-auto text-center relative z-10">
+                    <h3 class="text-3xl font-bold text-gray-900 mb-4">Bergabunglah dalam Misi Kami</h3>
+                    <p class="text-lg text-gray-700 mb-8">
+                        Dengan SRIKANDI APP, kita bersama menciptakan lingkungan kampus yang aman, inklusif, dan bebas
+                        dari segala bentuk kekerasan. Unduh aplikasinya sekarang dan jadi bagian dari perubahan.
+                    </p>
+                    <a href="#"
+                        class="bg-indigo-600 text-white px-10 py-4 rounded-full text-xl font-semibold hover:bg-indigo-700 transition duration-300 shadow-md">
+                        Unduh Aplikasi SRIKANDI
+                    </a>
+                    <div class="app-availability flex flex-col items-center mt-8">
+                        <span class="text-sm text-gray-600 mb-3 font-medium">Tersedia untuk perangkat Android</span>
+                        <div class="app-badges flex gap-4">
+                            <a href="https://play.google.com/store/apps/details?id=XXXXXXXX" target="_blank"
+                                aria-label="Get it on Google Play" class="w-36 h-12 flex items-center justify-center">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/2560px-Google_Play_Store_badge_EN.svg.png"
+                                    alt="Get it on Google Play" class="w-full h-full object-contain" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contact" class="bg-gray-900 text-gray-300 py-12 mt-auto">
+        <div class="container mx-auto px-4 max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <h3 class="text-xl font-bold text-white mb-4">SRIKANDI APP</h3>
+                <p class="text-sm">Aplikasi resmi Satgas PPKPT untuk mendukung lingkungan yang aman dan bebas kekerasan.
+                    Dedikasi kami adalah keamanan dan kenyamanan bagi seluruh civitas akademika.</p>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-white mb-4">Navigasi Cepat</h3>
+                <ul class="space-y-2">
+                    <li><a href="#home" class="hover:text-white transition duration-300">Home</a></li>
+                    <li><a href="#features" class="hover:text-white transition duration-300">Fitur</a></li>
+                    <li><a href="#contact" class="hover:text-white transition duration-300">Kontak</a></li>
+                    <li><a href="#" class="hover:text-white transition duration-300">Kebijakan Privasi</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-white mb-4">Hubungi Kami</h3>
+                <p class="text-sm mt-2">Email: <a href="mailto:support@srikandiapp.ac.id"
+                        class="hover:text-white transition duration-300">support@srikandiapp.ac.id</a></p>
+                <p class="text-sm">Telepon: +62813-2126-8893</p>
+            </div>
+        </div>
+        <div class="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-500">
+            &copy; 2025 SRIKANDI APP. All rights reserved. Made with 💖 by Jurusan Teknik Komputer dan Informatika
+            Polban.
+        </div>
+    </footer>
+
+    <script>
+        const navbarToggler = document.getElementById("navbarToggler");
+        const mobileMenu = document.getElementById("mobileMenu");
+
+        navbarToggler.addEventListener("click", () => {
+            const isExpanded = navbarToggler.getAttribute("aria-expanded") === "true";
+            navbarToggler.setAttribute("aria-expanded", !isExpanded);
+            mobileMenu.classList.toggle("hidden");
+            mobileMenu.classList.toggle("flex");
+            mobileMenu.classList.toggle("flex-col");
+        });
+
+        document.addEventListener('click', function (event) {
+            const isClickInside = mobileMenu.contains(event.target) || navbarToggler.contains(event.target);
+            if (!isClickInside && !mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.add('hidden');
+                mobileMenu.classList.remove('flex', 'flex-col');
+                navbarToggler.setAttribute("aria-expanded", "false");
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

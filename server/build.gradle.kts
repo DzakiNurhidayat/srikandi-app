@@ -17,6 +17,10 @@ tasks.withType<Jar> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 repositories {
     mavenCentral()
 }
@@ -31,6 +35,15 @@ configurations.all {
         force("io.grpc:grpc-stub:1.63.0")
     }
 }
+
+sourceSets {
+    main {
+        resources {
+            srcDir("src/main/resources")
+        }
+    }
+}
+
 
 dependencies {
     implementation(projects.shared)

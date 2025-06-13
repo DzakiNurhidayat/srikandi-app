@@ -58,6 +58,18 @@ fun Application.configureRouting() {
     File(uploadDir).mkdirs()
 
     routing {
+        get("/") {
+            val indexStream = this::class.java.classLoader.getResourceAsStream("static/index.html")
+            if (indexStream != null) {
+                call.respondText(
+                    indexStream.readBytes().toString(Charsets.UTF_8),
+                    contentType = io.ktor.http.ContentType.Text.Html
+                )
+            } else {
+                call.respondText("index.html not found", status = io.ktor.http.HttpStatusCode.NotFound)
+            }
+        }
+
         authenticate("firebase_auth") {
             //endpoint aplikasi (/api)
             route("/api") {
