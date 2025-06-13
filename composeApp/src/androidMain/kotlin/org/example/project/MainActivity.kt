@@ -8,12 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.example.project.firebase.FcmTokenManager
 import org.example.project.ui.navigation.navGraph
 import org.example.project.ui.theme.SrikandiAppTheme
 
@@ -24,7 +19,6 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        fetchFcmToken()
         setContent {
             navController = rememberNavController()
             handleNotificationIntent(intent, navController)
@@ -40,23 +34,6 @@ class MainActivity : ComponentActivity() {
         handleNotificationIntent(intent, navController)
     }
 
-    private fun fetchFcmToken() {
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val token = task.result
-                println("FCM Token: $token")
-                CoroutineScope(Dispatchers.IO).launch {
-                    sendTokenToServer("user123", token)}
-            } else {
-                println("Failed to fetch FCM Token: ${task.exception?.message}")
-            }
-        }
-    }
-
-    private suspend fun sendTokenToServer(userId: String, token: String) {
-        FcmTokenManager.registerToken(userId, token)
-    }
-
     private fun handleNotificationIntent(intent: Intent?, navController: NavHostController) {
         intent?.let {
             val notificationData = it.getStringExtra("notification_data")
@@ -65,7 +42,7 @@ class MainActivity : ComponentActivity() {
             when {
                 action == "open_feature" && featureId != null -> {
                     navController.navigate("feature_screen/$featureId") {
-                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        popUpTo(0) { inclusive = false }
                     }
                 }
                 notificationData != null -> {

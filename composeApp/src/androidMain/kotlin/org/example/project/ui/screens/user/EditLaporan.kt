@@ -146,7 +146,7 @@ fun EditLaporanScreen(
                 )
 
                 // Update report
-                reportViewModel.updateReport(reportId, reportRequest).getOrThrow()
+                reportViewModel.editReport(reportId, reportRequest).getOrThrow()
 
                 // Show success message and navigate back
                 snackbarHostState.showSnackbar("Laporan berhasil diperbarui")
@@ -195,7 +195,7 @@ fun EditLaporanScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
                 Image(
-                    painter = painterResource(id = R.drawable.srikandi),
+                    painter = painterResource(id = R.drawable.satgas_ppkpt),
                     contentDescription = "Logo Srikandi",
                     modifier = Modifier
                         .height(120.dp)

@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.media.RingtoneManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -17,9 +18,33 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.example.project.MainActivity
 import org.example.project.R
-import org.example.project.firebase.FcmTokenManager
+import org.example.project.utils.TokenManager
+import javax.inject.Inject
 
-class MyFirebaseMessagingService : FirebaseMessagingService() {
+class FirebaseMessagingService : FirebaseMessagingService() {
+
+    @Inject
+    lateinit var tokenManager: TokenManager
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        Log.d("FCM", "New token: $token")
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val lastToken = tokenManager.getFcmToken()
+
+            if (lastToken != token) {
+                try {
+                    tokenManager.saveFcmToken(token)
+                    Log.d("FCM", "Token updated to server.")
+                } catch (e: Exception) {
+                    Log.e("FCM", "Failed to send token", e)
+                }
+            } else {
+                Log.d("FCM", "Token already sent, skipping.")
+            }
+        }
+    }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
@@ -30,18 +55,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 remoteMessage.data
             )
         }
-    }
-
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        println("FCM Token: $token")
-        CoroutineScope(Dispatchers.IO).launch {
-            sendTokenToServer("user123", token)
-        }
-    }
-
-    private suspend fun sendTokenToServer(userId: String, token: String) {
-        FcmTokenManager.registerToken(userId, token)
     }
 
     private fun showNotification(title: String, message: String, data: Map<String, String> = emptyMap()) {

@@ -1,13 +1,9 @@
 package org.example.project.ui.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
-import org.example.project.common.enums.StatusLaporan
 import org.example.project.data.repositories.ReportRepository
 import org.example.project.model.entities.Report
 import javax.inject.Inject
@@ -22,15 +18,5 @@ class VerifikasiViewModel @Inject constructor(
 
     fun setReport(report: Report) {
         _report.value = report
-    }
-
-    fun updateReportStatus(id: Int, status: StatusLaporan) {
-        viewModelScope.launch {
-            try {
-                repository.updateStatus(id, status)
-            } catch (e: Exception) {
-                Log.e("ReportViewModel", "Failed to update report status", e)
-            }
-        }
     }
 }

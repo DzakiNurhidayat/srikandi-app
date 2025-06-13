@@ -16,6 +16,7 @@ private val LightColorScheme = lightColorScheme(
     error = error,
     primary = primary,
     onPrimary = onPrimary,
+    primaryContainer = primaryContainer
 )
 
 val Shapes = Shapes()

@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -18,16 +20,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
 import org.example.project.common.enums.StatusLaporan
 import org.example.project.ui.components.CustomButton
 import org.example.project.ui.components.confirmationDialog
 import org.example.project.ui.navigation.Screen
-import org.example.project.ui.theme.primary
+import org.example.project.ui.viewmodel.ReportViewModel
 import org.example.project.ui.viewmodel.VerifikasiViewModel
 import org.example.project.utils.toReadableString
 import java.time.LocalDate
@@ -37,10 +40,11 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun VerifikasiScreen(
     navController: NavHostController,
-    viewModel: VerifikasiViewModel
+    reportviewModel: ReportViewModel,
+    verifikasiViewModel: VerifikasiViewModel
 ) {
     val textSize = 16.sp
-    val report by viewModel.report
+    val report by verifikasiViewModel.report
     var showRejectDialog by remember { mutableStateOf(false) }
     var showAcceptDialog by remember { mutableStateOf(false) }
 
@@ -233,35 +237,51 @@ fun VerifikasiScreen(
     if (showRejectDialog) {
         confirmationDialog(
             title = "Tolak Laporan",
-            message = "Apakah kamu yakin ingin menolak laporan ini?",
+            message = "Apakah anda yakin ingin menolak laporan ini?",
             confirmText = "Tolak",
             confirmButtonColor = MaterialTheme.colorScheme.error,
             onConfirm = {
                 showRejectDialog = false
-                viewModel.updateReportStatus(report?.id!!, StatusLaporan.REJECTED)
-                navController.navigate(Screen.DashboardKetua.route) {
-                    popUpTo(Screen.DashboardKetua.route) { inclusive = true }
-                    launchSingleTop = true
+                navController.currentBackStackEntry?.let { entry ->
+                    entry.lifecycleScope.launch {
+                        report?.id?.let {
+                            reportviewModel.updateReport(it, StatusLaporan.REJECTED)
+                        }
+                        navController.navigate(Screen.DashboardKetua.route) {
+                            popUpTo(Screen.DashboardKetua.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 }
             },
-            onDismiss = { showRejectDialog = false }
+            onDismiss = { showRejectDialog = false },
+            dismissText = "Batal",
+            icon = Icons.Default.Close
         )
     }
     if (showAcceptDialog) {
         confirmationDialog(
             title = "Terima Laporan",
-            message = "Apakah kamu yakin ingin menerima laporan ini?",
+            message = "Apakah anda yakin ingin menerima laporan ini?",
             confirmText = "Terima",
             confirmButtonColor = MaterialTheme.colorScheme.primary,
             onConfirm = {
-                showAcceptDialog = false
-                viewModel.updateReportStatus(report?.id!!, StatusLaporan.VERIFIED)
-                navController.navigate(Screen.DashboardKetua.route) {
-                    popUpTo(Screen.DashboardKetua.route) { inclusive = true }
-                    launchSingleTop = true
+                showRejectDialog = false
+                navController.currentBackStackEntry?.let { entry ->
+                    entry.lifecycleScope.launch {
+                        report?.id?.let {
+                            reportviewModel.updateReport(it, StatusLaporan.VERIFIED)
+                        }
+                        navController.navigate(Screen.DashboardKetua.route) {
+                            popUpTo(Screen.DashboardKetua.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 }
             },
-            onDismiss = { showAcceptDialog = false }
+            onDismiss = { showRejectDialog = false },
+            dismissText = "Batal",
+            icon = Icons.Default.Done
         )
     }
 }

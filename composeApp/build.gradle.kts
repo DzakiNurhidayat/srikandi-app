@@ -1,5 +1,14 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.*
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+val apiKey: String = localProperties.getProperty("NEWS_API_KEY") ?: ""
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -16,12 +25,17 @@ android {
     namespace = "org.example.project"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "org.example.project"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "NEWS_API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -80,11 +94,20 @@ kotlin {
             implementation(libs.coil)
             implementation(libs.media3.exoplayer)
             implementation(libs.media3.ui)
-
+            implementation(libs.androidx.activity.ktx)
+            implementation(libs.composeui.material.icons.extended)
 
             // Firebase
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.messaging)
+            implementation(libs.firebase.auth)
+            implementation(libs.firebase.auth.ktx)
+            implementation(libs.firebase.firestore.ktx)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.play.services.auth)
+            implementation(libs.firebase.core)
+
         }
 
         all {
@@ -101,6 +124,7 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.googleid)
     ksp(libs.hilt.compiler)
 
     // Room

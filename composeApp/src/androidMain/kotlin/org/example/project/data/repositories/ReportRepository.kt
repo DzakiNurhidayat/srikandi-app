@@ -1,22 +1,26 @@
 package org.example.project.data.repositories
 
-import org.example.project.common.enums.StatusLaporan
+import okhttp3.MultipartBody
 import org.example.project.data.remote.ApiService
 import org.example.project.model.Response
 import org.example.project.model.entities.Report
-import org.example.project.model.request.StatusLaporanRequest
 import org.example.project.model.request.ReportRequest
+import org.example.project.model.request.StatusLaporanRequest
 import javax.inject.Inject
-import okhttp3.MultipartBody
+import javax.inject.Named
 import okhttp3.ResponseBody
 
-class ReportRepository @Inject constructor(private val apiService: ApiService) {
+class ReportRepository @Inject constructor(
+    @Named("internal") private val apiService: ApiService,
+) {
+
     suspend fun getReports(): Response<List<Report>> = apiService.getReports()
     suspend fun getUserReports(): Response<List<Report>> = apiService.getUserReports()
-    suspend fun updateStatus(id: Int, status: StatusLaporan) {
-        val request = StatusLaporanRequest(status)
-        apiService.updateStatus(id, request)
+
+    suspend fun updateReport(id: Int, status: StatusLaporanRequest) {
+        apiService.updateStatus(id, status)
     }
+
     suspend fun uploadFilesAndGetPaths(
         parts: List<MultipartBody.Part>
     ): Response<List<String>> {
@@ -29,15 +33,14 @@ class ReportRepository @Inject constructor(private val apiService: ApiService) {
         return apiService.createReport(reportRequest)
     }
 
-    suspend fun deleteReport(id: Int) {
-        apiService.deleteReport(id)
-    }
-
     suspend fun getReportById(id: Int): Response<Report> {
         return apiService.getReportById(id)
     }
 
-    suspend fun updateReport(id: Int, reportRequest: ReportRequest): Response<Report> {
-        return apiService.updateReport(id, reportRequest)
+    suspend fun editReport(id: Int, reportRequest: ReportRequest): Response<Report> {
+        return apiService.editReport(
+            id,
+            reportRequest
+        )
     }
 }
