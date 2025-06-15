@@ -57,6 +57,9 @@ fun Application.configureRouting() {
     val uploadDir = environment.config.propertyOrNull("storage.path")?.getString() ?: "unknown"
 
     routing {
+        get("/ping") {
+            call.respondText("Pong from Azure!")
+        }
         get("/") {
             val indexStream = this::class.java.classLoader.getResourceAsStream("static/index.html")
             if (indexStream != null) {
