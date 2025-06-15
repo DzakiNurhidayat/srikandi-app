@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.plugin.serialization)
+    id("application")
 }
 
 group = "com.example.project"
@@ -9,7 +10,7 @@ version = "1.0.0"
 
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "true"}")
+//    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "true"}")
 }
 
 tasks.withType<Jar> {
@@ -18,6 +19,11 @@ tasks.withType<Jar> {
 }
 
 tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    from(sourceSets.main.get().resources)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 

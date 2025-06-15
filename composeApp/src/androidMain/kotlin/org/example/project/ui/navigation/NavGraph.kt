@@ -75,7 +75,8 @@ fun navGraph(navController: NavHostController) {
         authState is AuthViewModel.AuthState.Success -> {
             when ((authState as AuthViewModel.AuthState.Success).activeRole) {
                 "Ketua Satgas" -> Screen.DashboardKetua.route
-                "Satgas", "Pengguna Umum" -> Screen.Profil.route // TODO()
+                "Satgas" -> Screen.UnderDev.route
+                "Pengguna Umum" -> Screen.DashboardUser.route
                 else -> {
                     Screen.Login.route
                 }
