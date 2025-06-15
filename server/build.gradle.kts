@@ -10,20 +10,15 @@ version = "1.0.0"
 
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
-//    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "true"}")
 }
 
-tasks.withType<Jar> {
-    from(sourceSets.main.get().resources)
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+tasks.named("shadowJar") {
+    setProperty("archiveBaseName", "server")
+    setProperty("archiveClassifier", "all")
+    setProperty("archiveVersion", "")
 }
 
 tasks.processResources {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    from(sourceSets.main.get().resources)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 

@@ -1,0 +1,34 @@
+name: Build and Deploy Ktor Backend to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Build fatJar Ktor Backend
+        run: ./gradlew :ktor-backend:fatJar
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'NAMA_APP_SERVICE_KAMU'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: './ktor-backend/build/libs/ktor-backend-fat.jar'
+
+      - name: Verify deployment
+        run: curl --fail http://NAMA_APP_SERVICE_KAMU.azurewebsites.net/health || exit 1
