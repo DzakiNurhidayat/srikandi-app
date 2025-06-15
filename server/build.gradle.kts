@@ -12,6 +12,10 @@ application {
     mainClass = "io.ktor.server.netty.EngineMain"
 }
 
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 repositories {
     mavenCentral()
 }
