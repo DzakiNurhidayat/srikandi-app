@@ -110,8 +110,8 @@ fun navGraph(navController: NavHostController) {
             val verifikasiViewModel = hiltViewModel<VerifikasiViewModel>()
             DashboardScreen(navController, verifikasiViewModel = verifikasiViewModel)
         }
-        composable(Screen.VerifikasiKasus.route) {
-            val parentEntry = remember(navController) {
+        composable(Screen.VerifikasiKasus.route) { navBackStackEntry ->
+            val parentEntry = remember(navBackStackEntry) {
                 navController.getBackStackEntry(Screen.DashboardKetua.route)
             }
             val verifikasiViewModel = hiltViewModel<VerifikasiViewModel>(parentEntry)
