@@ -35,22 +35,26 @@ jobs:
         with:
           name: ktor-app-jar
 
-      - name: Copy JAR to VM via SCP
+      - name: Copy JAR to VM's home directory
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           source: "*-all.jar"
-          target: "/home/${{ secrets.VM_USERNAME }}/server-all.jar"
-
-      - name: Restart Ktor service on VM
+          target: "/home/${{ secrets.VM_USERNAME }}" 
+          
+      - name: Rename JAR and Restart Service on VM
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           script: |
+            mv /home/${{ secrets.VM_USERNAME }}/*-all.jar /home/${{ secrets.VM_USERNAME }}/server-all.jar
+          
             sudo systemctl restart ktorapp.service
-            echo "Service restarted!"
+            echo "Service restarted! Waiting 5 seconds before checking status..."
+
+            sleep 5
             sudo systemctl status ktorapp.service
