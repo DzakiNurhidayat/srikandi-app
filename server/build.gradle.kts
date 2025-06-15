@@ -12,16 +12,6 @@ application {
     mainClass = "io.ktor.server.netty.EngineMain"
 }
 
-tasks.named("shadowJar") {
-    setProperty("archiveBaseName", "server")
-    setProperty("archiveClassifier", "all")
-    setProperty("archiveVersion", "")
-}
-
-tasks.processResources {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
 repositories {
     mavenCentral()
 }
