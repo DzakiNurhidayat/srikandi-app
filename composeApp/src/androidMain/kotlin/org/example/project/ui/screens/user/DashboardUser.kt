@@ -142,7 +142,7 @@ fun UserFilterTabs(
             FilterChip(
                 filter = Filter(
                     name = filter,
-                    enabled = mutableStateOf(isSelected)
+                    enabled = remember { mutableStateOf(isSelected) }
                 ),
                 onSelected = {
                     selectedFilter.value = filter
