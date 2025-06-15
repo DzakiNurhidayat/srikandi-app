@@ -54,8 +54,7 @@ fun Application.configureRouting() {
     val fcmService: FcmService by inject()
     val formSatuService: FormSatuService by inject()
     val evidenceService: EvidenceService by inject()
-    val uploadDir = "uploads/profile_pictures"
-    File(uploadDir).mkdirs()
+    val uploadDir = environment.config.propertyOrNull("storage.path")?.getString() ?: "unknown"
 
     routing {
         get("/") {
@@ -63,7 +62,7 @@ fun Application.configureRouting() {
             if (indexStream != null) {
                 call.respondText(
                     indexStream.readBytes().toString(Charsets.UTF_8),
-                    contentType = io.ktor.http.ContentType.Text.Html
+                    contentType = ContentType.Text.Html
                 )
             } else {
                 call.respondText("index.html not found", status = io.ktor.http.HttpStatusCode.NotFound)
@@ -272,9 +271,9 @@ fun Application.configureRouting() {
                                     val originalFileName = part.originalFileName ?: "unknown_file"
                                     val fileExtension = File(originalFileName).extension
                                     val uniqueFileName = "${UUID.randomUUID()}.$fileExtension"
-                                    val file = File("$uploadDir/$uniqueFileName")
+                                    val file = File("$uploadDir/profile_pictures/$uniqueFileName")
                                     part.provider().copyAndClose(file.writeChannel())
-                                    uploadedFilePath = "$uploadDir/$uniqueFileName"
+                                    uploadedFilePath = "$uploadDir/profile_pictures/$uniqueFileName"
                                     log.info("Uploaded file: $originalFileName as $uniqueFileName to $uploadedFilePath")
                                 }
 
@@ -291,7 +290,7 @@ fun Application.configureRouting() {
 
                         if (uploadedFilePath != null) {
                             val clientAccessiblePath =
-                                uploadedFilePath!!.removePrefix(uploadDir).removePrefix("/")
+                                uploadedFilePath!!.removePrefix(uploadDir).removePrefix("/profile_pictures")
 
                             call.respond(
                                 HttpStatusCode.OK,
@@ -315,6 +314,6 @@ fun Application.configureRouting() {
         }
         productRoute()
         staticResources("/static", "static")
-        staticFiles("/uploads", File("uploads"))
+        staticFiles("$uploadDir", File("$uploadDir"))
     }
 }
