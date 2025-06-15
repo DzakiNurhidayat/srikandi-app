@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy JAR app to Azure Web App - srikandi-app-server
+name: Build and Deploy to Azure VM
 
 on:
   push:
@@ -12,58 +9,49 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Java version
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'microsoft'
-
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
-
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon
-
-      - name: Upload artifact for deployment job
+        run: ./gradlew :server:shadowJar
+      - name: Upload JAR as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: java-app
-          path: 'server/build/libs/*.jar'
+          name: ktor-app-jar
+          path: server/build/libs/*-all.jar
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-  
     steps:
-      - name: Download artifact from build job
+      - name: Download JAR from build job
         uses: actions/download-artifact@v4
         with:
-          name: java-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_8FD937C458E8408A9061315A245CC80D }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_647C46DB5DAE4A8397E4410B2C6F2E7E }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_EA696DDB853A4F5E920E35DD41011132 }}
+          name: ktor-app-jar
 
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
+      - name: Copy JAR to VM via SCP
+        uses: appleboy/scp-action@v0.1.7
         with:
-          app-name: 'srikandi-app-server'
-          slot-name: 'Production'
-          package: '*-all.jar'
-          
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          source: "*-all.jar"
+          target: "/home/${{ secrets.VM_USERNAME }}"
+          rename: "server-all.jar"
+
+      - name: Restart Ktor service on VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            sudo systemctl restart ktorapp.service
+            echo "Service restarted!"
+            sudo systemctl status ktorapp.service
