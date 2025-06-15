@@ -3,7 +3,6 @@ package org.example.project.ui.navigation
 import SimpleDatePickerScreen
 import android.content.Context
 import android.os.Build
-import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,8 +54,7 @@ fun navGraph(navController: NavHostController) {
     val sharedPref = context.getSharedPreferences("SrikandiAppPrefs", Context.MODE_PRIVATE)
     val isFirstLaunch = sharedPref.getBoolean("isFirstLaunch", true)
 
-    val activity = LocalContext.current as ComponentActivity
-    val authViewModel: AuthViewModel = hiltViewModel(activity)
+    val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsState()
     val isAuthChecked by authViewModel.isAuthChecked.collectAsState()
 
