@@ -21,6 +21,9 @@ data class Report(
     val statusLaporan: StatusLaporan,
     val bukti: List<String> = emptyList(),
 
+    @Serializable(with = LocalDateSerializer::class)
+    val tanggalPemanggilan: LocalDate? = null,
+
     @Serializable(with = LocalDateTimeSerializer::class)
     val createdAt: LocalDateTime? = null,
 

@@ -22,6 +22,7 @@ class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.i
                 it[tempatKejadian] = entity.tempatKejadian
                 it[tanggalKejadian] = entity.tanggalKejadian.format(dateFormatter)
                 it[statusLaporan] = entity.statusLaporan
+                it[tanggalPemanggilan] = entity.tanggalPemanggilan?.format(dateFormatter) ?: "" // Gunakan null-safe
                 it[createdAt] = getCurrentTimeAsString()
                 it[updatedAt] = getCurrentTimeAsString()
             }[Reports.id]
@@ -38,6 +39,7 @@ class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.i
                 it[tempatKejadian] = entity.tempatKejadian
                 it[tanggalKejadian] = entity.tanggalKejadian.format(dateFormatter)
                 it[statusLaporan] = entity.statusLaporan
+                it[tanggalPemanggilan] = entity.tanggalPemanggilan?.format(dateFormatter) ?: "" // Gunakan null-safe
                 it[updatedAt] = getCurrentTimeAsString()
             }
         }
@@ -61,8 +63,9 @@ class ReportRepository : BaseRepository<Reports, Report, Int>(Reports, Reports.i
             tempatKejadian = row[Reports.tempatKejadian],
             tanggalKejadian = JavaLocalDate.parse(row[Reports.tanggalKejadian], dateFormatter),
             statusLaporan = row[Reports.statusLaporan],
+            tanggalPemanggilan = row[Reports.tanggalPemanggilan]?.let { JavaLocalDate.parse(it, dateFormatter) },
             createdAt = JavaLocalDateTime.parse(row[Reports.createdAt], dateTimeFormatter),
-            updatedAt = row[Reports.updatedAt].takeIf { it.isNotEmpty() }?.let { JavaLocalDateTime.parse(it, dateTimeFormatter) }
+            updatedAt = row[Reports.updatedAt]?.let { JavaLocalDateTime.parse(it, dateTimeFormatter) }
         )
     }
 

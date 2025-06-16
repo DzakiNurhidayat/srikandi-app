@@ -7,7 +7,6 @@ import org.example.project.model.Response
 import org.example.project.model.entities.Report
 import org.example.project.model.request.ReportRequest
 import org.example.project.model.request.StatusLaporanRequest
-import org.example.project.model.request.TokenRequest
 import javax.inject.Inject
 
 class ReportRepository @Inject constructor(
@@ -17,8 +16,13 @@ class ReportRepository @Inject constructor(
     suspend fun getReports(): Response<List<Report>> = apiService.getReports()
     suspend fun getUserReports(): Response<List<Report>> = apiService.getUserReports()
 
-    suspend fun updateReport(id: Int, status: StatusLaporanRequest) {
-        apiService.updateStatus(id, status)
+    suspend fun updateReportStatus(id: Int, status: StatusLaporanRequest): Response<Boolean> { // Return type added for clarity
+        return apiService.updateStatus(id, status)
+    }
+
+    // New function to update report status and clarification date
+    suspend fun updateReportClarificationDate(id: Int, request: StatusLaporanRequest): Response<Boolean> {
+        return apiService.updateInvitationStatus(id, request)
     }
 
     suspend fun uploadFilesAndGetPaths(

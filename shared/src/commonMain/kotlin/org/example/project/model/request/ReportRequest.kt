@@ -11,6 +11,7 @@ data class ReportRequest(
     val jenisKekerasan: JenisKekerasan,
     val tempatKejadian: String,
     val tanggalKejadian : String,
+    val tanggalPemanggilan: String? = null,
     val statusLaporan: StatusLaporan,
     val bukti: List<String> = emptyList(),
     val createdAt: String? = null,
