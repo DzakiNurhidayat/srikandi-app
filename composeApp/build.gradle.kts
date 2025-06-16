@@ -9,6 +9,7 @@ if (localPropertiesFile.exists()) {
 }
 
 val apiKey: String = localProperties.getProperty("NEWS_API_KEY") ?: ""
+val serverUrl: String = localProperties.getProperty("SERVER_URL") ?: ""
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -36,6 +37,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "NEWS_API_KEY", "\"$apiKey\"")
+        buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
     }
 
     buildTypes {

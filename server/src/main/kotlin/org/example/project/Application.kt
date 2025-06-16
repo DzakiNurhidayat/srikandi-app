@@ -15,7 +15,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    val environmentName = environment.config.propertyOrNull("server")?.getString() ?: "unknown"
+    val environmentName = environment.config.propertyOrNull("ktor.environment")?.getString() ?: "unknown"
     val logger = LoggerFactory.getLogger("Application")
 
     logger.info("Starting application in $environmentName environment")

@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.example.project.BuildConfig
 import org.example.project.data.remote.ApiService
 import org.example.project.data.remote.AuthInterceptor
 import org.example.project.data.remote.NewsApiService
@@ -31,8 +32,12 @@ object NetworkModule {
         val json = Json { ignoreUnknownKeys = true }
 
         return Retrofit.Builder()
+<<<<<<< HEAD
             .baseUrl("http://10.0.2.2:8080/")
 //            .baseUrl("http://192.168.1.2:8080/")
+=======
+            .baseUrl(BuildConfig.SERVER_URL)
+>>>>>>> 5eee71efa9c91387bdfa073c465ba99b1f2de2c6
             .client(client)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()

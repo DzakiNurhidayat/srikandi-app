@@ -3,7 +3,6 @@ package org.example.project.ui.navigation
 import SimpleDatePickerScreen
 import android.content.Context
 import android.os.Build
-import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,8 +54,7 @@ fun navGraph(navController: NavHostController) {
     val sharedPref = context.getSharedPreferences("SrikandiAppPrefs", Context.MODE_PRIVATE)
     val isFirstLaunch = sharedPref.getBoolean("isFirstLaunch", true)
 
-    val activity = LocalContext.current as ComponentActivity
-    val authViewModel: AuthViewModel = hiltViewModel(activity)
+    val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsState()
     val isAuthChecked by authViewModel.isAuthChecked.collectAsState()
 
@@ -75,7 +73,8 @@ fun navGraph(navController: NavHostController) {
         authState is AuthViewModel.AuthState.Success -> {
             when ((authState as AuthViewModel.AuthState.Success).activeRole) {
                 "Ketua Satgas" -> Screen.DashboardKetua.route
-                "Satgas", "Pengguna Umum" -> Screen.Profil.route // TODO()
+                "Satgas" -> Screen.UnderDev.route
+                "Pengguna Umum" -> Screen.DashboardUser.route
                 else -> {
                     Screen.Login.route
                 }
@@ -111,8 +110,8 @@ fun navGraph(navController: NavHostController) {
             val verifikasiViewModel = hiltViewModel<VerifikasiViewModel>()
             DashboardScreen(navController, verifikasiViewModel = verifikasiViewModel)
         }
-        composable(Screen.VerifikasiKasus.route) {
-            val parentEntry = remember(navController) {
+        composable(Screen.VerifikasiKasus.route) { navBackStackEntry ->
+            val parentEntry = remember(navBackStackEntry) {
                 navController.getBackStackEntry(Screen.DashboardKetua.route)
             }
             val verifikasiViewModel = hiltViewModel<VerifikasiViewModel>(parentEntry)

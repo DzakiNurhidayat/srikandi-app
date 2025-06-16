@@ -320,7 +320,10 @@ fun FilterKasus(
         items(filters) { filter ->
             val isSelected = selectedFilter.value == filter
             FilterChip(
-                filter = Filter(name = filter, enabled = mutableStateOf(isSelected)),
+                filter = Filter(
+                    name = filter,
+                    enabled = remember { mutableStateOf(isSelected) }
+                ),
                 onSelected = {
                     selectedFilter.value = filter
                 },

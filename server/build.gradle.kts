@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.plugin.serialization)
+    id("application")
 }
 
 group = "com.example.project"
@@ -9,11 +10,9 @@ version = "1.0.0"
 
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "true"}")
 }
 
-tasks.withType<Jar> {
-    from(sourceSets.main.get().resources)
+tasks.processResources {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
@@ -31,6 +30,15 @@ configurations.all {
         force("io.grpc:grpc-stub:1.63.0")
     }
 }
+
+sourceSets {
+    main {
+        resources {
+            srcDir("src/main/resources")
+        }
+    }
+}
+
 
 dependencies {
     implementation(projects.shared)
