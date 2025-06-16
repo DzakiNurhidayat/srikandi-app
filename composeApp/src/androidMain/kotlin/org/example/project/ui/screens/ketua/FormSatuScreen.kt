@@ -1,527 +1,714 @@
 package org.example.project.ui.screens.ketua
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.example.project.ui.components.AppTopBar
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
+import org.example.project.common.enums.JenisKekerasan
+import org.example.project.common.enums.StatusLaporan
+import org.example.project.common.enums.StatusTerlapor
+import org.example.project.model.entities.FormSatu
+import org.example.project.model.entities.Report
+import org.example.project.model.request.FormSatuRequest
+import org.example.project.ui.navigation.Screen
+import org.example.project.ui.viewmodel.FormSatuViewModel
+import org.example.project.ui.viewmodel.VerifikasiViewModel
+import org.example.project.utils.toReadableString
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FormSatuScreen(
-    onNavigateBack: () -> Unit,
-    onSubmit: (FormSatuData) -> Unit
+    navController: NavHostController,
+    verifikasiViewModel: VerifikasiViewModel,
+    formSatuViewModel: FormSatuViewModel = hiltViewModel()
 ) {
+    val report = verifikasiViewModel.report.value
     val scrollState = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
-    var namaPelapor by remember { mutableStateOf("") }
-    var nomorTelepon by remember { mutableStateOf("") }
-    var jenisPelapor by remember { mutableStateOf("") }
-    var domisiliPelapor by remember { mutableStateOf("") }
-    var jenisKekerasanSeksual by remember { mutableStateOf("") }
-    var ceritaSingkat by remember { mutableStateOf("") }
+    // Custom colors
+    val primaryBlue = Color(0xFF004499)
+    val lightBlue = Color(0xFF6699CC)
+
+    // Poppins font family (fallback to default if not available)
+    val poppinsFont = FontFamily.Default
+
+    // State untuk menyimpan data form
+    var domisili by remember { mutableStateOf("") }
     var ciriFisik by remember { mutableStateOf("") }
     var memilikiDisabilitas by remember { mutableStateOf(false) }
-    var statusTerlapor by remember { mutableStateOf("") }
-    var jenisKelaminTerlapor by remember { mutableStateOf("") }
-
-    // Alasan pengaduan multiple choices
-    var alasanSaksi by remember { mutableStateOf(false) }
-    var alasanKorbanButuhBantuan by remember { mutableStateOf(false) }
-    var alasanTindakTegas by remember { mutableStateOf(false) }
-    var alasanDokumentasi by remember { mutableStateOf(false) }
-    var alasanLainnya by remember { mutableStateOf(false) }
-    var alasanLainnyaText by remember { mutableStateOf("") }
-
+    var ceritaSingkat by remember { mutableStateOf("") }
     var kontakLain by remember { mutableStateOf("") }
+    var kebutuhanKorban by remember { mutableStateOf("") }
+    var statusTerlapor by remember { mutableStateOf(StatusTerlapor.Mahasiswa) }
+    var jenisKelaminTerlapor by remember { mutableStateOf(false) }
+    var alasanPengaduan by remember { mutableStateOf("") }
+    var namaTerlapor by remember { mutableStateOf("") } // Kolom baru, diabaikan jika tidak diperlukan
+    var isLoading by remember { mutableStateOf(false) }
 
-    // Kebutuhan korban multiple choices
-    var kebutuhanKonseling by remember { mutableStateOf(false) }
-    var kebutuhanRohani by remember { mutableStateOf(false) }
-    var kebutuhanHukum by remember { mutableStateOf(false) }
-    var kebutuhanMedis by remember { mutableStateOf(false) }
-    var kebutuhanDigital by remember { mutableStateOf(false) }
-    var kebutuhanLainnya by remember { mutableStateOf(false) }
-    var kebutuhanLainnyaText by remember { mutableStateOf("") }
-    var tidakButuhPendampingan by remember { mutableStateOf(false) }
-
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                title = "Formulir Penerimaan Laporan",
-                onBackClick = onNavigateBack
-            )
+    // Atur reportId di ViewModel dan load data FormSatu yang sudah ada
+    LaunchedEffect(report) {
+        report?.id?.let { reportId ->
+            formSatuViewModel.setReportId(reportId)
+            isLoading = true
+            val result = formSatuViewModel.getFormSatu()
+            isLoading = false
+            result.onSuccess { formSatu ->
+                domisili = formSatu.domisili
+                ciriFisik = formSatu.ciriFisik
+                memilikiDisabilitas = formSatu.memilikiDisabilitas
+                ceritaSingkat = formSatu.ceritaSingkat
+                kontakLain = formSatu.kontakLain
+                kebutuhanKorban = formSatu.kebutuhanKorban
+                statusTerlapor = formSatu.statusTerlapor
+                jenisKelaminTerlapor = formSatu.jenisKelaminTerlapor
+                alasanPengaduan = formSatu.alasanPengaduan
+            }.onFailure { exception ->
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "Gagal memuat data Form 1: ${exception.message}"
+                    )
+                }
+            }
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Error message if any
-            errorMessage?.let {
-                Text(
-                    text = it,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
+    }
 
-            // Form fields
-            FormSection(title = "Data Pelapor") {
-                OutlinedTextField(
-                    value = namaPelapor,
-                    onValueChange = { namaPelapor = it },
-                    label = { Text("Nama pelapor (korban/saksi)*") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Radio button for role selection
-                Text("Melapor Sebagai:", fontSize = 16.sp)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp)
+    MaterialTheme {
+        if (report != null) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                        .verticalScroll(scrollState)
                 ) {
-                    RadioButton(
-                        selected = jenisPelapor == "Korban",
-                        onClick = { jenisPelapor = "Korban" }
-                    )
-                    Text("Korban", modifier = Modifier.padding(start = 4.dp))
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    RadioButton(
-                        selected = jenisPelapor == "Saksi",
-                        onClick = { jenisPelapor = "Saksi" }
-                    )
-                    Text("Saksi", modifier = Modifier.padding(start = 4.dp))
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = nomorTelepon,
-                    onValueChange = { nomorTelepon = it },
-                    label = { Text("Nomor telepon") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = domisiliPelapor,
-                    onValueChange = { domisiliPelapor = it },
-                    label = { Text("Domisili pelapor") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            FormSection(title = "Detail Peristiwa") {
-                OutlinedTextField(
-                    value = jenisKekerasanSeksual,
-                    onValueChange = { jenisKekerasanSeksual = it },
-                    label = { Text("Jenis kekerasan*") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = ceritaSingkat,
-                    onValueChange = { ceritaSingkat = it },
-                    label = { Text("Isi Laporan") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 4
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = ceritaSingkat,
-                    onValueChange = { ceritaSingkat = it },
-                    label = { Text("Cerita singkat peristiwa (waktu, tempat, dan peristiwa)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 4
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = ciriFisik,
-                    onValueChange = { ciriFisik = it },
-                    label = { Text("Sebutkan ciri fisik pada saat kejadian") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Disabilitas selection
-                Text("Memiliki disabilitas*")
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Spacer(modifier = Modifier.width(16.dp))
-                    RadioButton(
-                        selected = memilikiDisabilitas,
-                        onClick = { memilikiDisabilitas = true }
-                    )
-                    Text("Ya", modifier = Modifier.padding(start = 4.dp))
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    RadioButton(
-                        selected = !memilikiDisabilitas,
-                        onClick = { memilikiDisabilitas = false }
-                    )
-                    Text("Tidak", modifier = Modifier.padding(start = 4.dp))
-                }
-            }
-
-            FormSection(title = "Data Terlapor") {
-                Text("Status terlapor:")
-
-                // Status terlapor options
-                val statusOptions = listOf("mahasiswa", "pendidik", "tenaga kependidikan", "warga kampus", "masyarakat umum")
-                Column {
-                    statusOptions.forEach { status ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 2.dp)
+                    // Header
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 30.dp, vertical = 20.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Formulir 1",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 22.sp,
+                            fontFamily = poppinsFont,
+                            color = primaryBlue
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .border(BorderStroke(1.5.dp, primaryBlue), CircleShape)
+                                .clickable { navController.popBackStack() }
+                                .hoverable(remember { MutableInteractionSource() }),
+                            contentAlignment = Alignment.Center
                         ) {
-                            RadioButton(
-                                selected = statusTerlapor == status,
-                                onClick = { statusTerlapor = status }
+                            Icon(
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = "Close",
+                                tint = primaryBlue,
+                                modifier = Modifier.size(25.dp)
                             )
-                            Text(status.replaceFirstChar { it.uppercase() }, modifier = Modifier.padding(start = 4.dp))
                         }
                     }
-                }
+                    Divider(thickness = 2.dp, color = primaryBlue)
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    // Informasi Kejadian
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 40.dp, vertical = 20.dp)
+                    ) {
+                        val textSize = 16.sp
+                        Text(
+                            text = "Informasi Kejadian",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            fontFamily = poppinsFont,
+                            color = primaryBlue,
+                            modifier = Modifier.padding(bottom = 10.dp)
+                        )
 
-                // Jenis kelamin terlapor
-                Text("Jenis kelamin terlapor:")
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
-                    RadioButton(
-                        selected = jenisKelaminTerlapor == "Laki-laki",
-                        onClick = { jenisKelaminTerlapor = "Laki-laki" }
-                    )
-                    Text("Laki-laki", modifier = Modifier.padding(start = 4.dp))
+                        val infoList = listOf(
+                            "Id Laporan" to (report.id.toString()),
+                            "Pelapor" to "-",
+                            "Bentuk Kekerasan" to (report.jenisKekerasan?.toReadableString() ?: "-"),
+                            "Waktu Kejadian" to "${report.tanggalKejadian?.format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale("id")))} (${
+                                report.tanggalKejadian?.let {
+                                    ChronoUnit.DAYS.between(it, LocalDate.now())
+                                } ?: "0"
+                            } hari yang lalu)",
+                            "Tempat Kejadian" to (report.tempatKejadian ?: "-"),
+                            "Deskripsi Kejadian" to (report.deskripsi ?: "-")
+                        )
 
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    RadioButton(
-                        selected = jenisKelaminTerlapor == "Perempuan",
-                        onClick = { jenisKelaminTerlapor = "Perempuan" }
-                    )
-                    Text("Perempuan", modifier = Modifier.padding(start = 4.dp))
-                }
-            }
-
-            FormSection(title = "Alasan Pengaduan") {
-                Text("Silakan centang satu atau lebih pilihan berikut:")
-
-                CheckboxWithLabel(
-                    checked = alasanSaksi,
-                    onCheckedChange = { alasanSaksi = it },
-                    label = "Saya seorang saksi yang khawatir dengan keadaan korban."
-                )
-
-                CheckboxWithLabel(
-                    checked = alasanKorbanButuhBantuan,
-                    onCheckedChange = { alasanKorbanButuhBantuan = it },
-                    label = "Saya seorang korban yang memerlukan bantuan pemulihan."
-                )
-
-                CheckboxWithLabel(
-                    checked = alasanTindakTegas,
-                    onCheckedChange = { alasanTindakTegas = it },
-                    label = "Saya ingin perguruan tinggi menindak tegas terlapor."
-                )
-
-                CheckboxWithLabel(
-                    checked = alasanDokumentasi,
-                    onCheckedChange = { alasanDokumentasi = it },
-                    label = "Saya ingin satuan tugas PPKS mendokumentasikan kejadiannya, meningkatkan keamanan perguruan tinggi dari kekerasan seksual, dan memberi perlindungan bagi saya."
-                )
-
-                CheckboxWithLabel(
-                    checked = alasanLainnya,
-                    onCheckedChange = { alasanLainnya = it },
-                    label = "Lainnya:"
-                )
-
-                if (alasanLainnya) {
-                    OutlinedTextField(
-                        value = alasanLainnyaText,
-                        onValueChange = { alasanLainnyaText = it },
-                        label = { Text("Sebutkan...") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            FormSection(title = "Informasi Tambahan") {
-                OutlinedTextField(
-                    value = kontakLain,
-                    onValueChange = { kontakLain = it },
-                    label = { Text("Nomor telepon/alamat pos-el pihak lain yang dapat dikonfirmasi") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("Identifikasi kebutuhan korban:")
-
-                CheckboxWithLabel(
-                    checked = kebutuhanKonseling,
-                    onCheckedChange = { kebutuhanKonseling = it },
-                    label = "Konseling psikologis"
-                )
-
-                CheckboxWithLabel(
-                    checked = kebutuhanRohani,
-                    onCheckedChange = { kebutuhanRohani = it },
-                    label = "Konseling rohani/spiritual"
-                )
-
-                CheckboxWithLabel(
-                    checked = kebutuhanHukum,
-                    onCheckedChange = { kebutuhanHukum = it },
-                    label = "Bantuan hukum"
-                )
-
-                CheckboxWithLabel(
-                    checked = kebutuhanMedis,
-                    onCheckedChange = { kebutuhanMedis = it },
-                    label = "Bantuan medis"
-                )
-
-                CheckboxWithLabel(
-                    checked = kebutuhanDigital,
-                    onCheckedChange = { kebutuhanDigital = it },
-                    label = "Bantuan digital"
-                )
-
-                CheckboxWithLabel(
-                    checked = kebutuhanLainnya,
-                    onCheckedChange = { kebutuhanLainnya = it },
-                    label = "Lainnya:"
-                )
-
-                if (kebutuhanLainnya) {
-                    OutlinedTextField(
-                        value = kebutuhanLainnyaText,
-                        onValueChange = { kebutuhanLainnyaText = it },
-                        label = { Text("Sebutkan...") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                CheckboxWithLabel(
-                    checked = tidakButuhPendampingan,
-                    onCheckedChange = { tidakButuhPendampingan = it },
-                    label = "Tidak membutuhkan pendampingan"
-                )
-            }
-
-            // Upload evidence section
-            FormSection(title = "Bukti Pendukung") {
-                Text("Upload Bukti Pendukung (opsional)")
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(vertical = 8.dp)
-                ) {
-                    // Upload buttons/placeholders
-                    repeat(3) {
-                        OutlinedButton(
-                            onClick = { /* Handle upload */ },
-                            modifier = Modifier.size(80.dp)
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(15.dp)
                         ) {
-                            Text("+")
+                            infoList.forEach { (label, value) ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = label,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        fontWeight = FontWeight.Light,
+                                        fontSize = textSize,
+                                        fontFamily = poppinsFont,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Text(
+                                        text = value,
+                                        fontSize = textSize,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontFamily = poppinsFont,
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
                         }
                     }
-                }
-            }
 
-            // Checkbox for agreement
-            CheckboxWithLabel(
-                checked = false,
-                onCheckedChange = { /* handle check */ },
-                label = "Dengan melaporkan kasus, Anda setuju untuk dipanggil oleh tim Satgas guna wawancara lebih lanjut sesuai ketentuan Permendikbud No. 55 Tahun 2024."
-            )
+                    Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
 
-            // Submit button
-            Button(
-                onClick = {
-                    // Validate form
-                    if (namaPelapor.isBlank() || jenisKekerasanSeksual.isBlank()) {
-                        errorMessage = "Kolom bertanda * wajib diisi."
-                    } else {
-                        // Create form data object and submit
-                        val formData = FormSatuData(
-                            namaPelapor = namaPelapor,
-                            nomorTelepon = nomorTelepon,
-                            jenisPelapor = jenisPelapor,
-                            domisiliPelapor = domisiliPelapor,
-                            jenisKekerasanSeksual = jenisKekerasanSeksual,
-                            ceritaSingkat = ceritaSingkat,
-                            ciriFisik = ciriFisik,
-                            memilikiDisabilitas = memilikiDisabilitas,
-                            statusTerlapor = statusTerlapor,
-                            jenisKelaminTerlapor = jenisKelaminTerlapor,
-                            alasanPengaduan = buildAlasanPengaduan(
-                                alasanSaksi, alasanKorbanButuhBantuan, alasanTindakTegas,
-                                alasanDokumentasi, alasanLainnya, alasanLainnyaText
-                            ),
-                            kontakLain = kontakLain,
-                            kebutuhanKorban = buildKebutuhanKorban(
-                                kebutuhanKonseling, kebutuhanRohani, kebutuhanHukum,
-                                kebutuhanMedis, kebutuhanDigital, kebutuhanLainnya,
-                                kebutuhanLainnyaText, tidakButuhPendampingan
+                    // Informasi Korban
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 40.dp, vertical = 20.dp)
+                    ) {
+                        Text(
+                            text = "Informasi Korban",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            fontFamily = poppinsFont,
+                            color = primaryBlue,
+                            modifier = Modifier.padding(bottom = 10.dp)
+                        )
+                        OutlinedTextField(
+                            value = domisili,
+                            onValueChange = {
+                                domisili = it
+                                formSatuViewModel.updateDomisili(it)
+                            },
+                            label = {
+                                Text(
+                                    "Domisili",
+                                    fontFamily = poppinsFont,
+                                    color = primaryBlue
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryBlue,
+                                unfocusedBorderColor = lightBlue,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedLabelColor = primaryBlue,
+                                unfocusedLabelColor = primaryBlue
                             )
                         )
-                        onSubmit(formData)
+                        OutlinedTextField(
+                            value = ciriFisik,
+                            onValueChange = {
+                                ciriFisik = it
+                                formSatuViewModel.updateCiriFisik(it)
+                            },
+                            label = {
+                                Text(
+                                    "Ciri Fisik",
+                                    fontFamily = poppinsFont,
+                                    color = primaryBlue
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryBlue,
+                                unfocusedBorderColor = lightBlue,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedLabelColor = primaryBlue,
+                                unfocusedLabelColor = primaryBlue
+                            )
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Memiliki Disabilitas:",
+                                color = primaryBlue,
+                                fontSize = 16.sp,
+                                fontFamily = poppinsFont,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Row(
+                                modifier = Modifier.clickable { memilikiDisabilitas = true },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = memilikiDisabilitas,
+                                    onClick = {
+                                        memilikiDisabilitas = true
+                                        formSatuViewModel.updateMemilikiDisabilitas(true)
+                                    },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = primaryBlue,
+                                        unselectedColor = lightBlue
+                                    )
+                                )
+                                Text(
+                                    "Ya",
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    fontFamily = poppinsFont
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Row(
+                                modifier = Modifier.clickable { memilikiDisabilitas = false },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = !memilikiDisabilitas,
+                                    onClick = {
+                                        memilikiDisabilitas = false
+                                        formSatuViewModel.updateMemilikiDisabilitas(false)
+                                    },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = primaryBlue,
+                                        unselectedColor = lightBlue
+                                    )
+                                )
+                                Text(
+                                    "Tidak",
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    fontFamily = poppinsFont
+                                )
+                            }
+                        }
+                        OutlinedTextField(
+                            value = ceritaSingkat,
+                            onValueChange = {
+                                ceritaSingkat = it
+                                formSatuViewModel.updateCeritaSingkat(it)
+                            },
+                            label = {
+                                Text(
+                                    "Cerita Singkat",
+                                    fontFamily = poppinsFont,
+                                    color = primaryBlue
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 100.dp)
+                                .padding(vertical = 8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryBlue,
+                                unfocusedBorderColor = lightBlue,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedLabelColor = primaryBlue,
+                                unfocusedLabelColor = primaryBlue
+                            )
+                        )
+                        OutlinedTextField(
+                            value = kontakLain,
+                            onValueChange = {
+                                kontakLain = it
+                                formSatuViewModel.updateKontakLain(it)
+                            },
+                            label = {
+                                Text(
+                                    "Kontak Lain",
+                                    fontFamily = poppinsFont,
+                                    color = primaryBlue
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryBlue,
+                                unfocusedBorderColor = lightBlue,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedLabelColor = primaryBlue,
+                                unfocusedLabelColor = primaryBlue
+                            )
+                        )
+                        OutlinedTextField(
+                            value = kebutuhanKorban,
+                            onValueChange = {
+                                kebutuhanKorban = it
+                                formSatuViewModel.updateKebutuhanKorban(it)
+                            },
+                            label = {
+                                Text(
+                                    "Kebutuhan Korban",
+                                    fontFamily = poppinsFont,
+                                    color = primaryBlue
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 100.dp)
+                                .padding(vertical = 8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryBlue,
+                                unfocusedBorderColor = lightBlue,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedLabelColor = primaryBlue,
+                                unfocusedLabelColor = primaryBlue
+                            )
+                        )
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-            ) {
-                Text("Kirim Laporan")
+
+                    Divider(thickness = 1.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+
+                    // Informasi Pelaku
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 40.dp, vertical = 20.dp)
+                    ) {
+                        Text(
+                            text = "Informasi Pelaku",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            fontFamily = poppinsFont,
+                            color = primaryBlue,
+                            modifier = Modifier.padding(bottom = 10.dp)
+                        )
+
+                        // Nama Terlapor - Kolom baru (diabaikan jika tidak diperlukan)
+                        OutlinedTextField(
+                            value = namaTerlapor,
+                            onValueChange = { namaTerlapor = it },
+                            label = {
+                                Text(
+                                    "Nama Terlapor",
+                                    fontFamily = poppinsFont,
+                                    color = primaryBlue
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryBlue,
+                                unfocusedBorderColor = lightBlue,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedLabelColor = primaryBlue,
+                                unfocusedLabelColor = primaryBlue
+                            )
+                        )
+
+                        var expandedStatusTerlapor by remember { mutableStateOf(false) }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = statusTerlapor.name,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = {
+                                    Text(
+                                        "Status Terlapor",
+                                        fontFamily = poppinsFont,
+                                        color = primaryBlue
+                                    )
+                                },
+                                trailingIcon = {
+                                    IconButton(onClick = { expandedStatusTerlapor = !expandedStatusTerlapor }) {
+                                        Icon(
+                                            imageVector = if (expandedStatusTerlapor) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                                            contentDescription = null,
+                                            tint = primaryBlue
+                                        )
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { expandedStatusTerlapor = true },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = primaryBlue,
+                                    unfocusedBorderColor = lightBlue,
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    focusedLabelColor = primaryBlue,
+                                    unfocusedLabelColor = primaryBlue
+                                )
+                            )
+                            DropdownMenu(
+                                expanded = expandedStatusTerlapor,
+                                onDismissRequest = { expandedStatusTerlapor = false },
+                                modifier = Modifier
+                                    .width(200.dp)
+                                    .background(Color.White, RoundedCornerShape(8.dp))
+                            ) {
+                                StatusTerlapor.entries.forEach { selectionOption ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                selectionOption.name,
+                                                fontFamily = poppinsFont,
+                                                color = MaterialTheme.colorScheme.onBackground
+                                            )
+                                        },
+                                        onClick = {
+                                            statusTerlapor = selectionOption
+                                            formSatuViewModel.updateStatusTerlapor(selectionOption)
+                                            expandedStatusTerlapor = false
+                                        },
+                                        modifier = Modifier.background(Color.Transparent)
+                                    )
+                                }
+                            }
+                        }
+
+                        Text(
+                            text = "Jenis Kelamin Terlapor",
+                            color = primaryBlue,
+                            fontFamily = poppinsFont,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.clickable {
+                                    jenisKelaminTerlapor = false
+                                    formSatuViewModel.updateJenisKelaminTerlapor(false)
+                                },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = !jenisKelaminTerlapor,
+                                    onClick = {
+                                        jenisKelaminTerlapor = false
+                                        formSatuViewModel.updateJenisKelaminTerlapor(false)
+                                    },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = primaryBlue,
+                                        unselectedColor = lightBlue
+                                    )
+                                )
+                                Text(
+                                    "Laki-Laki",
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    fontFamily = poppinsFont
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Row(
+                                modifier = Modifier.clickable {
+                                    jenisKelaminTerlapor = true
+                                    formSatuViewModel.updateJenisKelaminTerlapor(true)
+                                },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = jenisKelaminTerlapor,
+                                    onClick = {
+                                        jenisKelaminTerlapor = true
+                                        formSatuViewModel.updateJenisKelaminTerlapor(true)
+                                    },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = primaryBlue,
+                                        unselectedColor = lightBlue
+                                    )
+                                )
+                                Text(
+                                    "Perempuan",
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    fontFamily = poppinsFont
+                                )
+                            }
+                        }
+                        OutlinedTextField(
+                            value = alasanPengaduan,
+                            onValueChange = {
+                                alasanPengaduan = it
+                                formSatuViewModel.updateAlasanPengaduan(it)
+                            },
+                            label = {
+                                Text(
+                                    "Alasan Pengaduan",
+                                    fontFamily = poppinsFont,
+                                    color = primaryBlue
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 100.dp)
+                                .padding(vertical = 8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = primaryBlue,
+                                unfocusedBorderColor = lightBlue,
+                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                focusedLabelColor = primaryBlue,
+                                unfocusedLabelColor = primaryBlue
+                            )
+                        )
+                    }
+
+                    var isButtonPressed by remember { mutableStateOf(false) }
+                    val interactionSource = remember { MutableInteractionSource() }
+
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                isLoading = true
+                                // Update semua field di ViewModel
+                                formSatuViewModel.updateDomisili(domisili)
+                                formSatuViewModel.updateCiriFisik(ciriFisik)
+                                formSatuViewModel.updateMemilikiDisabilitas(memilikiDisabilitas)
+                                formSatuViewModel.updateCeritaSingkat(ceritaSingkat)
+                                formSatuViewModel.updateKontakLain(kontakLain)
+                                formSatuViewModel.updateKebutuhanKorban(kebutuhanKorban)
+                                formSatuViewModel.updateStatusTerlapor(statusTerlapor)
+                                formSatuViewModel.updateJenisKelaminTerlapor(jenisKelaminTerlapor)
+                                formSatuViewModel.updateAlasanPengaduan(alasanPengaduan)
+
+                                // Simpan FormSatu
+                                val result = formSatuViewModel.createFormSatu()
+                                isLoading = false
+                                result.onSuccess {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Form 1 berhasil disimpan")
+                                        navController.navigate(Screen.DashboardKetua.route) {
+                                            popUpTo(Screen.DashboardKetua.route) { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                }.onFailure { exception ->
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            message = "Gagal menyimpan Form 1: ${exception.message}"
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 40.dp, vertical = 20.dp)
+                            .height(56.dp),
+                        enabled = !isLoading,
+                        shape = RoundedCornerShape(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = primaryBlue,
+                            contentColor = Color.White,
+                            disabledContainerColor = lightBlue,
+                            disabledContentColor = Color.White
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 4.dp,
+                            pressedElevation = 8.dp,
+                            hoveredElevation = 6.dp
+                        ),
+                        interactionSource = interactionSource
+                    ) {
+                        if (isLoading) {
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Menyimpan...",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = poppinsFont,
+                                    color = Color.White
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "Simpan Form 1",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = poppinsFont,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+
+                // Indikator loading
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = primaryBlue
+                    )
+                }
+
+                // Pesan error
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) { snackbarData ->
+                    Snackbar(
+                        modifier = Modifier.padding(16.dp),
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ) {
+                        Text(
+                            snackbarData.visuals.message,
+                            fontFamily = poppinsFont
+                        )
+                    }
+                }
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    "Data laporan tidak ditemukan.",
+                    fontFamily = poppinsFont,
+                    color = primaryBlue
+                )
             }
         }
     }
 }
 
-@Composable
-fun FormSection(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-    ) {
-        Text(
-            text = title,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-fun CheckboxWithLabel(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    label: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
-        Text(
-            text = label,
-            modifier = Modifier.padding(start = 4.dp)
-        )
-    }
-}
-
-// Helper functions for building composite data
-private fun buildAlasanPengaduan(
-    alasanSaksi: Boolean,
-    alasanKorbanButuhBantuan: Boolean,
-    alasanTindakTegas: Boolean,
-    alasanDokumentasi: Boolean,
-    alasanLainnya: Boolean,
-    alasanLainnyaText: String
-): List<String> {
-    val alasan = mutableListOf<String>()
-
-    if (alasanSaksi) alasan.add("Saya seorang saksi yang khawatir dengan keadaan korban.")
-    if (alasanKorbanButuhBantuan) alasan.add("Saya seorang korban yang memerlukan bantuan pemulihan.")
-    if (alasanTindakTegas) alasan.add("Saya ingin perguruan tinggi menindak tegas terlapor.")
-    if (alasanDokumentasi) alasan.add("Saya ingin satuan tugas PPKS mendokumentasikan kejadiannya.")
-    if (alasanLainnya && alasanLainnyaText.isNotBlank()) alasan.add("Lainnya: $alasanLainnyaText")
-
-    return alasan
-}
-
-private fun buildKebutuhanKorban(
-    kebutuhanKonseling: Boolean,
-    kebutuhanRohani: Boolean,
-    kebutuhanHukum: Boolean,
-    kebutuhanMedis: Boolean,
-    kebutuhanDigital: Boolean,
-    kebutuhanLainnya: Boolean,
-    kebutuhanLainnyaText: String,
-    tidakButuhPendampingan: Boolean
-): List<String> {
-    val kebutuhan = mutableListOf<String>()
-
-    if (kebutuhanKonseling) kebutuhan.add("Konseling psikologis")
-    if (kebutuhanRohani) kebutuhan.add("Konseling rohani/spiritual")
-    if (kebutuhanHukum) kebutuhan.add("Bantuan hukum")
-    if (kebutuhanMedis) kebutuhan.add("Bantuan medis")
-    if (kebutuhanDigital) kebutuhan.add("Bantuan digital")
-    if (kebutuhanLainnya && kebutuhanLainnyaText.isNotBlank()) kebutuhan.add("Lainnya: $kebutuhanLainnyaText")
-    if (tidakButuhPendampingan) kebutuhan.add("Tidak membutuhkan pendampingan")
-
-    return kebutuhan
-}
-
-// Data class to hold form data
-data class FormSatuData(
-    val namaPelapor: String,
-    val nomorTelepon: String,
-    val jenisPelapor: String,
-    val domisiliPelapor: String,
-    val jenisKekerasanSeksual: String,
-    val ceritaSingkat: String,
-    val ciriFisik: String,
-    val memilikiDisabilitas: Boolean,
-    val statusTerlapor: String,
-    val jenisKelaminTerlapor: String,
-    val alasanPengaduan: List<String>,
-    val kontakLain: String,
-    val kebutuhanKorban: List<String>,
-)

@@ -7,9 +7,7 @@ import java.time.LocalDateTime
 
 @Serializable
 data class FormSatu(
-    var id: Int? = null,
-
-    // Referensi ke entitas Report
+    var form1id: Int? = null,
     val reportId: Int,
     val ciriFisik: String,
     val domisili: String,
@@ -20,10 +18,8 @@ data class FormSatu(
     val alasanPengaduan: String,
     val kontakLain: String,
     val kebutuhanKorban: String,
-
     @Serializable(with = LocalDateTimeSerializer::class)
     val createdAt: LocalDateTime? = null,
-
     @Serializable(with = LocalDateTimeSerializer::class)
     val updatedAt: LocalDateTime? = null
 )

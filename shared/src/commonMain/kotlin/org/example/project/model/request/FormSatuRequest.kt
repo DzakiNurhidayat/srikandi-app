@@ -1,9 +1,10 @@
 package org.example.project.model.request
 
+import kotlinx.serialization.Serializable
 import org.example.project.common.enums.StatusTerlapor
 
+@Serializable
 data class FormSatuRequest(
-    val reportId: Int?,
     val ciriFisik: String,
     val domisili: String,
     val ceritaSingkat: String,
