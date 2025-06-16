@@ -19,7 +19,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
       - name: Build distribution package
-        run: ./gradlew :server:installDist # <-- Perintah build baru
+        run: ./gradlew :server:installDist
 
       - name: Create tarball from distribution
         run: tar -czf server-dist.tar.gz -C server/build/install/server .
@@ -28,7 +28,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ktor-app-dist
-          path: server-dist.tar.gz # <-- Upload file .tar.gz
+          path: server-dist.tar.gz
 
   deploy:
     runs-on: ubuntu-latest
