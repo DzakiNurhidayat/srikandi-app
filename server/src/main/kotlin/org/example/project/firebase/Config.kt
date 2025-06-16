@@ -18,7 +18,8 @@ class FirebaseConfig(credentialPath: String) {
         val inputStream: InputStream = if (File(credentialPath).exists()) {
             FileInputStream(credentialPath)
         } else {
-            ByteArrayInputStream(credentialPath.toByteArray(Charsets.UTF_8))
+            val fixed = credentialPath.replace("\\n", "\n")
+            ByteArrayInputStream(fixed.toByteArray(Charsets.UTF_8))
         }
 
         inputStream.use {
