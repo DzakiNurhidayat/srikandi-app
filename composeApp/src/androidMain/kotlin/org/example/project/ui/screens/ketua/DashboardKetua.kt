@@ -41,6 +41,7 @@ import org.example.project.data.model.Filter
 import org.example.project.model.entities.Report
 import org.example.project.ui.components.CustomButton
 import org.example.project.ui.components.FilterChip
+import org.example.project.ui.navigation.Screen
 import org.example.project.ui.viewmodel.ReportViewModel
 import org.example.project.ui.viewmodel.VerifikasiViewModel
 import org.example.project.utils.shadow
@@ -471,9 +472,9 @@ fun CaseCard(
                     when (report.statusLaporan) {
                         StatusLaporan.DRAFT,
                         StatusLaporan.DELETED -> navController.navigate("verifikasi_kasus")
-
-                        StatusLaporan.VERIFIED -> navController.navigate("under_development")
+                        StatusLaporan.VERIFIED -> navController.navigate(Screen.FormSatu.route)
                         StatusLaporan.TEAMED,
+                        StatusLaporan.FORM1,
                         StatusLaporan.FORM2,
                         StatusLaporan.DONE -> navController.navigate("under_development")
 
