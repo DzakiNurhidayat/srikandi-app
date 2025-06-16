@@ -6,16 +6,20 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange // Pastikan ini diimport
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext // Tambahkan ini
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,7 +28,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.lifecycleScope // Mungkin tidak lagi diperlukan langsung di card
+import androidx.media3.common.util.Log
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import org.example.project.R
@@ -35,90 +40,141 @@ import org.example.project.ui.components.FilterChip
 import org.example.project.ui.screens.ketua.TotalCase
 import org.example.project.ui.viewmodel.ReportViewModel
 import org.example.project.utils.shadow
-import java.time.format.DateTimeFormatter
-import java.util.*
+import java.text.SimpleDateFormat // Tambahkan ini
+import java.util.Calendar // Tambahkan ini
+import java.util.Locale // Tambahkan ini
+import java.time.format.DateTimeFormatter // Jika masih menggunakan ini untuk format default
+import androidx.compose.runtime.rememberCoroutineScope // <--- Tambahkan impor ini!
+import kotlinx.coroutines.launch // <--- Tambahkan impor ini!
+import androidx.compose.material3.Text
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.sp
+import org.example.project.ui.theme.surfaceVariant
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun UserDashboardScreen(
     navController: NavHostController,
     viewModel: ReportViewModel = hiltViewModel(),
-
 ) {
     val reports by viewModel.reports.collectAsState()
     val formattedReports = reports.filter { it.statusLaporan != StatusLaporan.DELETED }
+    val verifiedReports = reports.filter { it.statusLaporan == StatusLaporan.VERIFIED } // Untuk undangan
+
     val selectedFilter = remember { mutableStateOf("Laporan") }
+
+    val PrimaryBlue = Color(0xFF3F51B5)
+    val DarkGray = Color(0xFF333333)
+    val MediumGray = Color(0xFF666666)
+    val LightGrayBackground = Color(0xFFF5F5F5)
 
     LaunchedEffect(Unit) {
         viewModel.getReports()
     }
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController) }
+        bottomBar = { BottomNavigationBar(navController) },
+        containerColor = LightGrayBackground
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
-            HeaderUserSection()
+            HeaderUserSection(darkGrayColor = DarkGray, mediumGrayColor = MediumGray)
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(
                 thickness = 2.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                color = MediumGray.copy(alpha = 0.2f)
             )
             TotalCase(formattedReports.size, "Laporan Terkirim")
             UserFilterTabs(
                 selectedFilter = selectedFilter,
                 modifier = Modifier.fillMaxWidth(),
+                primaryColor = PrimaryBlue,
+                darkGrayColor = DarkGray,
+                mediumGrayColor = MediumGray
             )
 
             when (selectedFilter.value) {
                 "Laporan" -> {
-                    LazyColumn {
-                        items(formattedReports) { report ->
-                            UserReportCard(
-                                navController = navController,
-                                report = report,
-                                viewModel = viewModel
-                            )
+                    if (formattedReports.isEmpty()) {
+                        Text(
+                            text = "Belum ada laporan terkirim.",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DarkGray,
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        LazyColumn {
+                            items(formattedReports) { report ->
+                                UserReportCard(
+                                    navController = navController,
+                                    report = report,
+                                    viewModel = viewModel,
+                                    primaryBlue = PrimaryBlue,
+                                    darkGray = DarkGray,
+                                    mediumGray = MediumGray,
+                                    showCalendarIcon = false // TIDAK tampilkan ikon kalender untuk tab "Laporan"
+                                )
+                            }
                         }
                     }
                 }
                 "Undangan" -> {
-                    // Placeholder untuk daftar undangan
-                    Text(
-                        text = "Daftar undangan belum tersedia",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    if (verifiedReports.isEmpty()) {
+                        Text(
+                            text = "Belum ada undangan klarifikasi.",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DarkGray,
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        LazyColumn {
+                            items(verifiedReports) { report ->
+                                UserReportCard(
+                                    navController = navController,
+                                    report = report,
+                                    viewModel = viewModel,
+                                    primaryBlue = PrimaryBlue,
+                                    darkGray = DarkGray,
+                                    mediumGray = MediumGray,
+                                    showCalendarIcon = true // TAMPILKAN ikon kalender untuk tab "Undangan"
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+// HeaderUserSection dan UserFilterTabs (tidak berubah, sesuaikan import)
 @Composable
-fun HeaderUserSection() {
+fun HeaderUserSection(darkGrayColor: Color, mediumGrayColor: Color) {
     Column(Modifier.padding(24.dp, 32.dp, 24.dp, 12.dp)) {
-        Text(text = "Selamat Pagi,", style = MaterialTheme.typography.bodyMedium)
+        Text(text = "Selamat Pagi,", style = MaterialTheme.typography.bodyMedium.copy(color = mediumGrayColor))
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = "Restu Akbar",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = darkGrayColor
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Setiap suara memiliki kekuatan. Jangan takut untuk berbicara dan mencari bantuan.",
             fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Justify
+            color = mediumGrayColor,
+            style = LocalTextStyle.current.copy(textAlign = TextAlign.Justify)
         )
     }
 }
@@ -128,7 +184,10 @@ fun UserFilterTabs(
     selectedFilter: MutableState<String>,
     modifier: Modifier = Modifier,
     chipWidth: Dp = 120.dp,
-    chipHeight: Dp = 32.dp
+    chipHeight: Dp = 32.dp,
+    primaryColor: Color,
+    darkGrayColor: Color,
+    mediumGrayColor: Color
 ) {
     val filters = listOf("Laporan", "Undangan")
     LazyRow(
@@ -151,24 +210,118 @@ fun UserFilterTabs(
                     .width(chipWidth)
                     .height(chipHeight)
                     .padding(end = 5.dp),
-                shape = RoundedCornerShape(20),
+                shape = RoundedCornerShape(20.dp),
             )
         }
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun UserReportCard(
     navController: NavHostController,
     report: Report,
-    viewModel: ReportViewModel = hiltViewModel()
+    viewModel: ReportViewModel = hiltViewModel(),
+    primaryBlue: Color,
+    darkGray: Color,
+    mediumGray: Color,
+    showCalendarIcon: Boolean = false
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val formattedDate = remember(report.tanggalKejadian) {
-        report.tanggalKejadian.format(DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(Locale("id")))
+    // State untuk tanggal klarifikasi yang akan ditampilkan atau dipilih
+    // Inisialisasi dengan report.tanggalKlarifikasi jika sudah ada
+    var selectedKlarifikasiDate by remember { mutableStateOf(report.tanggalPemanggilan ?: "") }
+
+    val context = LocalContext.current
+    val calendar = remember { Calendar.getInstance() }
+
+    // DatePickerDialog definition
+    val datePickerDialog = remember {
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                calendar.set(year, month, dayOfMonth)
+                val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val newDate = dateFormat.format(calendar.time)
+                selectedKlarifikasiDate = newDate // Update state UI
+
+                // Panggil fungsi BARU di ViewModel untuk mengupdate tanggal klarifikasi
+                report.id?.let { id ->
+                    viewModel.updateKlarifikasiDateForReport(id, newDate, report) // Passing report object
+                }
+            },
+            // Set tanggal awal DatePicker ke tanggal yang sudah ada di report.tanggalKlarifikasi
+            // Jika belum ada, gunakan tanggal hari ini
+            (if (selectedKlarifikasiDate.toString().isNotBlank()) {
+                try {
+                    val parsedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(selectedKlarifikasiDate.toString())
+                    parsedDate?.let { calendar.time = it }
+                    calendar.get(Calendar.YEAR)
+                } catch (e: Exception) {
+                    Calendar.getInstance().get(Calendar.YEAR)
+                }
+            } else {
+                Calendar.getInstance().get(Calendar.YEAR)
+            }),
+            (if (selectedKlarifikasiDate.toString().isNotBlank()) {
+                try {
+                    val parsedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(selectedKlarifikasiDate.toString())
+                    parsedDate?.let { calendar.time = it }
+                    calendar.get(Calendar.MONTH)
+                } catch (e: Exception) {
+                    Calendar.getInstance().get(Calendar.MONTH)
+                }
+            } else {
+                Calendar.getInstance().get(Calendar.MONTH)
+            }),
+            (if (selectedKlarifikasiDate.toString().isNotBlank()) {
+                try {
+                    val parsedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(selectedKlarifikasiDate.toString())
+                    parsedDate?.let { calendar.time = it }
+                    calendar.get(Calendar.DAY_OF_MONTH)
+                } catch (e: Exception) {
+                    Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+                }
+            } else {
+                Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+            })
+        ).apply {
+            // Opsional: Set minimum date jika klarifikasi tidak bisa di masa lalu
+            datePicker.minDate = System.currentTimeMillis() - 1000 // Tidak boleh kurang dari hari ini
+        }
     }
+
+
+    val formattedDate = remember(report.tanggalKejadian) {
+        try {
+            val inputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val date = inputFormat.parse(report.tanggalPemanggilan.toString())
+            val outputFormat = SimpleDateFormat("dd MMM𝖒𝖚", Locale("id"))
+            outputFormat.format(date)
+        } catch (e: Exception) {
+            report.tanggalKejadian // Fallback jika parsing gagal
+        }
+    }
+
+    val formattedKlarifikasiDate = remember(selectedKlarifikasiDate) {
+        if (selectedKlarifikasiDate.toString().isNotBlank()) {
+            try {
+                val inputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val date = inputFormat.parse(selectedKlarifikasiDate.toString())
+                val outputFormat = SimpleDateFormat("dd MMM𝖒𝖚", Locale("id"))
+                outputFormat.format(date)
+            } catch (e: Exception) {
+                selectedKlarifikasiDate // Fallback jika parsing gagal
+            }
+        } else {
+            "Pilih Tanggal Klarifikasi" // Teks default jika belum dipilih
+        }
+    }
+
+    val coroutineScope = rememberCoroutineScope() // <--- DEFINISIKAN INI DI SINI!
 
     if (showDeleteDialog) {
         AlertDialog(
@@ -177,7 +330,8 @@ fun UserReportCard(
                 Text(
                     text = "Konfirmasi Hapus",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = darkGray
                 )
             },
             text = {
@@ -185,19 +339,21 @@ fun UserReportCard(
                     text = "Apakah Anda yakin ingin menghapus laporan ini?",
                     fontSize = 14.sp,
                     textAlign = TextAlign.Justify,
+                    color = mediumGray
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        navController.currentBackStackEntry?.let { entry ->
-                            entry.lifecycleScope.launch {
+                        // Memanggil updateReport untuk mengubah status menjadi DELETED
+                        report.id?.let { id ->
+                            // GUNAKAN 'coroutineScope' YANG SUDAH DI-REMEMBER
+                            coroutineScope.launch { // <-- PERBAIKAN PENTING DI SINI
                                 try {
-                                    report.id?.let {
-                                        viewModel.updateReport(it, StatusLaporan.DELETED)
-                                    }
+                                    viewModel.updateReport(id, StatusLaporan.DELETED)
                                     showDeleteDialog = false
                                 } catch (e: Exception) {
+                                    Log.e("UserReportCard", "Error deleting report: ${e.message}")
                                     showDeleteDialog = false
                                 }
                             }
@@ -217,7 +373,7 @@ fun UserReportCard(
                 ) {
                     Text(
                         "Batal",
-                        color = MaterialTheme.colorScheme.primary
+                        color = primaryBlue
                     )
                 }
             },
@@ -231,11 +387,11 @@ fun UserReportCard(
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 8.dp)
             .shadow(
-                color = Color.Black.copy(alpha = 0.2f),
-                borderRadius = 20.dp,
-                blurRadius = 15.dp,
-                offsetX = 2.dp,
-                offsetY = 8.dp,
+                color = Color.Black.copy(alpha = 0.1f),
+                borderRadius = 16.dp,
+                blurRadius = 10.dp,
+                offsetX = 0.dp,
+                offsetY = 4.dp,
                 spread = 0.dp
             ),
         shape = RoundedCornerShape(16.dp),
@@ -245,104 +401,149 @@ fun UserReportCard(
             modifier = Modifier
                 .padding(16.dp)
                 .clickable {
+                    // Navigasi ke detail/edit laporan
                     navController.navigate("edit_laporan/${report.id}")
                 }
         ) {
-            // Row: Image and Text (Name + Department/Date)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.satgas_ppkpt),
-                    contentDescription = "Laporan",
-                    modifier = Modifier
-                        .height(60.dp)
-                        .width(60.dp)
-                )
-                Column {
-                    // Row 1: Name
-                    Text(
-                        text = "Restu Akbar",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color.Black
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = R.drawable.satgas_ppkpt),
+                        contentDescription = "Laporan Icon",
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(Color.White, RoundedCornerShape(percent = 50))
+                            .padding(4.dp)
                     )
-                    Spacer(modifier = Modifier.height(1.dp))
-                    // Row 2: Department and Date
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Restu Akbar",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = darkGray
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Teknik Komputer dan Informatika ‘23",
-                            color = Color.Gray,
-                            fontSize = 10.sp,
+                            color = mediumGray,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Normal
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = formattedDate,
-                            color = Color.Gray,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Normal
+                            text = "Setiap suara memiliki kekuatan. Jangan takut untuk berbicara dan mencari bantuan.",
+                            fontSize = 12.sp,
+                            // Perubahan di sini: Pindahkan textAlign ke dalam style
+                            style = LocalTextStyle.current.copy(textAlign = TextAlign.Justify) // atau MaterialTheme.typography.bodySmall.copy(textAlign = TextAlign.Justify)
+                            // Jika Anda sudah punya style lain yang diterapkan, gunakan .copy() pada style tersebut
                         )
                     }
                 }
+                // Ikon Kalender dan Tanggal Klarifikasi
+                if (showCalendarIcon) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        IconButton(
+                            onClick = { datePickerDialog.show() },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = "Pilih Tanggal Klarifikasi",
+                                tint = primaryBlue,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        // The Text composable here is correct with the String 'formattedKlarifikasiDate'
+                        Text(
+                            text = formattedKlarifikasiDate.toString(),
+                            style = TextStyle(
+                                color = darkGray,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+
+                    }
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            // Divider
+
+            Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(
-                color = Color.Gray.copy(alpha = 0.2f),
+                color = mediumGray.copy(alpha = 0.2f),
                 thickness = 1.dp,
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            // Description
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = report.deskripsi,
-                color = Color.Black,
+                color = darkGray,
                 fontSize = 14.sp,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(16.dp))
-            // Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
+            // Tombol "Lihat Detail" untuk laporan VERIFIED
+            if (report.statusLaporan == StatusLaporan.VERIFIED) {
+                Button(
                     onClick = {
-                        navController.navigate("edit_laporan/${report.id}")
+                        // TODO: Navigasi ke detail laporan yang diverifikasi
+                        navController.navigate("detail_verifikasi/${report.id}")
                     },
-                    modifier = Modifier
-                        .weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.Gray),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
                 ) {
                     Text(
-                        text = "Edit Laporan",
-                        color = Color(0xFF666666),
-                        fontSize = 14.sp
+                        text = "Lihat Detail",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
-                OutlinedButton(
-                    onClick = { showDeleteDialog = true },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.Red),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+            } else { // Tombol Edit dan Hapus untuk status lainnya
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "Hapus Laporan",
-                        color = Color.Red,
-                        fontSize = 14.sp
-                    )
+                    OutlinedButton(
+                        onClick = {
+                            navController.navigate("edit_laporan/${report.id}")
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, primaryBlue),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryBlue),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "Edit Laporan",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color.Red),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "Hapus Laporan",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
     }
 }
+
