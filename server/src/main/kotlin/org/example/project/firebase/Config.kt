@@ -6,14 +6,23 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.cloud.FirestoreClient
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayInputStream
+import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 
 class FirebaseConfig(credentialPath: String) {
     private val logger = LoggerFactory.getLogger(FirebaseConfig::class.java)
 
     private val credentials: GoogleCredentials by lazy {
-        FileInputStream(credentialPath).use { fileStream ->
-            GoogleCredentials.fromStream(fileStream)
+        val inputStream: InputStream = if (File(credentialPath).exists()) {
+            FileInputStream(credentialPath)
+        } else {
+            ByteArrayInputStream(credentialPath.toByteArray(Charsets.UTF_8))
+        }
+
+        inputStream.use {
+            GoogleCredentials.fromStream(it)
                 .createScoped(listOf("https://www.googleapis.com/auth/firebase.messaging"))
         }
     }
