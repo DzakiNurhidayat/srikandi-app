@@ -80,16 +80,18 @@ kotlin {
             implementation(libs.coil)
             implementation(libs.androidx.activity.ktx)
 
-            // Firebase
-            implementation(project.dependencies.platform(libs.firebase.bom))
+            // Material Icons for ArrowDropUp/Down
+            implementation("androidx.compose.material:material-icons-extended:1.7.4")
+
+            // Firebase dependencies (without platform here)
             implementation(libs.firebase.messaging)
             implementation(libs.firebase.auth)
             implementation(libs.androidx.credentials)
             implementation(libs.androidx.credentials.play.services.auth)
-            implementation (libs.play.services.auth)
-            implementation (libs.firebase.auth.ktx)
+            implementation(libs.play.services.auth)
+            implementation(libs.firebase.auth.ktx)
             implementation(libs.firebase.core)
-
+            implementation(libs.firebase.firestore.ktx)
         }
 
         all {
@@ -101,8 +103,12 @@ kotlin {
 }
 
 dependencies {
+    // Apply Firebase BOM at the top-level
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.androidx.media3.common.ktx)
+
     // Compose tooling
-    implementation(compose.uiTooling)
+    debugImplementation(compose.uiTooling)
 
     // Hilt
     implementation(libs.hilt.android)
@@ -110,9 +116,9 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     // Room
-    implementation(libs.room.runtime)
-    implementation(libs.room)
-    ksp(libs.room.compiler)
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
 
     // Retrofit
     implementation(libs.retrofit)
@@ -124,11 +130,9 @@ dependencies {
 
     // Compose UI
     implementation(libs.composeui)
-    implementation(libs.composeui.tooling.preview)
+    debugImplementation(libs.composeui.tooling.preview)
     implementation(libs.composeui.material3)
 
     // Navigation
-    implementation(libs.androidx.hilt.navigation.compose.v120)
-
-    implementation(libs.firebase.firestore.ktx)
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 }

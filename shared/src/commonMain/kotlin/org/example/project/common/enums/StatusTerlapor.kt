@@ -4,9 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class StatusTerlapor {
-    MAHASISWA,
-    PENDIDIK,
-    TENAGA_KEPENDIDIKAN,
-    WARGA_KAMPUS,
-    MASYARAKAT_UMUM
+    Mahasiswa,
+    Dosen,
+    TenagaKependidikan,
+    WargaKampus,
+    Masyarakat,
 }

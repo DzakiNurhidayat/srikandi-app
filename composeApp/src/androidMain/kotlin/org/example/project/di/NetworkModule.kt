@@ -10,7 +10,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.example.project.data.remote.ApiService
-import org.example.project.data.remote.AuthInterceptor
 import org.example.project.data.repositories.ProductRepository
 import retrofit2.Retrofit
 import javax.inject.Singleton
@@ -21,9 +20,8 @@ import javax.inject.Singleton
 object NetworkModule {
 
     @Provides
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+    fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
             .build()
     }
 
@@ -37,6 +35,7 @@ object NetworkModule {
 
         return Retrofit.Builder()
             .baseUrl("http://10.0.2.2:8080/")
+//            .baseUrl("http://192.168.137.80:8080/")
             .client(client)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()

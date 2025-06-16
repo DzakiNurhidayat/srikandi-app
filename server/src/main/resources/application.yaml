@@ -10,8 +10,8 @@ ktor:
 database:
   url: "jdbc:postgresql://localhost:5432/srikandi"
   driver: "org.postgresql.Driver"
-  username: "rebar"
-  password: ""
+  username: "haijuf"
+  password: "haijuf"
 
 firebase:
   fcmCredentialPath: "C:/dokumen/srikandi-app-firebase-adminsdk-fbsvc-a18ed7736a.json"

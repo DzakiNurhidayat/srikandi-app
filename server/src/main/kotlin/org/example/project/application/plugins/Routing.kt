@@ -21,28 +21,31 @@ import org.example.project.domain.services.inmemory.EvidenceService
 import org.example.project.domain.services.inmemory.FormSatuService
 import org.example.project.domain.services.inmemory.ReportService
 import org.example.project.firebase.NotificationService
-import org.example.project.model.Response
 import org.example.project.model.request.*
 import org.koin.ktor.ext.inject
 import java.io.File
 import java.util.*
+import kotlinx.serialization.json.Json
 
 fun Application.configureRouting() {
     install(StatusPages) {
         exception<IllegalArgumentException> { call, cause ->
             call.respond(
                 HttpStatusCode.BadRequest,
-                Response(false, cause.message ?: "Input data tidak valid", null)
+                errorResponse(cause.message ?: "Input data tidak valid")
             )
         }
         exception<Throwable> { call, cause ->
             call.respond(
                 HttpStatusCode.InternalServerError,
-                Response(false, cause.message ?: "Terjadi kesalahan pada server", null)
+                errorResponse("Terjadi kesalahan pada server")
             )
         }
         exception<NotFoundException> { call, cause ->
-            call.respond(HttpStatusCode.NotFound, errorResponse(cause.message ?: "Data tidak ditemukan"))
+            call.respond(
+                HttpStatusCode.NotFound,
+                errorResponse(cause.message ?: "Data tidak ditemukan")
+            )
         }
     }
     val reportService: ReportService by inject()
@@ -119,7 +122,7 @@ fun Application.configureRouting() {
                             if (filePaths.isEmpty()) {
                                 call.respond(
                                     HttpStatusCode.BadRequest,
-                                    successResponse(null, "Tidak ada file yang diunggah")
+                                    errorResponse("Tidak ada file yang diunggah")
                                 )
                                 return@post
                             }
@@ -131,7 +134,7 @@ fun Application.configureRouting() {
                         } catch (e: Exception) {
                             call.respond(
                                 HttpStatusCode.InternalServerError,
-                                successResponse(null, "Gagal mengunggah file: ${e.message}")
+                                errorResponse("Gagal mengunggah file: ${e.message}")
                             )
                         }
                     }
@@ -146,100 +149,191 @@ fun Application.configureRouting() {
                         val response = reportService.getAll()
                         call.respond(HttpStatusCode.OK, successResponse(response, "Berhasil mengambil semua laporan"))
                     }
-                    // POST buat Form1 baru
-                    post {
-                        val request = call.receive<FormSatuRequest>()
-                        if (request.ciriFisik.isBlank() || request.ceritaSingkat.isBlank()) {
+                    // Endpoint untuk FormSatu dengan unggah file
+
+                    // POST untuk membuat FormSatu dengan reportId sebagai query parameter
+                    post("/form-1") {
+                        val uploadsDir = File("uploads")
+                        if (!uploadsDir.exists()) {
+                            uploadsDir.mkdirs()
+                        }
+
+                        val filePaths = mutableListOf<String>()
+                        var formRequest: FormSatuRequest? = null
+                        val multipartData = call.receiveMultipart()
+                        val reportId = call.request.queryParameters["reportId"]?.toIntOrNull()
+                            ?: throw IllegalArgumentException("Report ID harus disediakan sebagai query parameter")
+
+                        try {
+                            multipartData.forEachPart { part ->
+                                when (part) {
+                                    is PartData.FileItem -> {
+                                        val originalFileName = part.originalFileName ?: "form1_${UUID.randomUUID()}"
+                                        val fileExtension = originalFileName.substringAfterLast('.', "")
+                                        val uniqueFileName = "${UUID.randomUUID()}.${fileExtension}"
+                                        val filePath = "uploads/$uniqueFileName"
+                                        val file = File(filePath)
+
+                                        file.outputStream().use { output ->
+                                            part.provider().copyTo(output)
+                                        }
+
+                                        filePaths.add(filePath)
+                                    }
+
+                                    is PartData.FormItem -> {
+                                        if (part.name == "formData") {
+                                            formRequest = Json.decodeFromString<FormSatuRequest>(part.value)
+                                        }
+                                    }
+
+                                    else -> {}
+                                }
+                                part.dispose()
+                            }
+
+                            if (formRequest == null) {
+                                call.respond(
+                                    HttpStatusCode.BadRequest,
+                                    errorResponse("Data FormSatu tidak ditemukan")
+                                )
+                                return@post
+                            }
+
+                            if (formRequest!!.ciriFisik.isBlank() || formRequest!!.ceritaSingkat.isBlank()) {
+                                call.respond(
+                                    HttpStatusCode.BadRequest,
+                                    errorResponse("Ciri fisik dan cerita singkat tidak boleh kosong")
+                                )
+                                return@post
+                            }
+
+                            if (filePaths.isEmpty()) {
+                                call.respond(
+                                    HttpStatusCode.BadRequest,
+                                    errorResponse("Tidak ada file yang diunggah")
+                                )
+                                return@post
+                            }
+
+                            val savedForm = formSatuService.create(formRequest!!, reportId)
+                            val report = reportService.getById(reportId)
+                                ?: throw NotFoundException("Report dengan ID $reportId tidak ditemukan")
+
                             call.respond(
-                                HttpStatusCode.BadRequest, successResponse(
+                                HttpStatusCode.Created,
+                                successResponse(savedForm, "FormSatu berhasil dibuat")
+                            )
+                        } catch (e: Exception) {
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                errorResponse("Terjadi kesalahan pada server: ${e.message}")
+                            )
+                        }
+                    }
+
+                    // GET FormSatu berdasarkan form1id dan reportId
+                    get("/form-1/{form1id}/{reportId}") {
+                        val form1id = call.parameters["form1id"]?.toIntOrNull()
+                            ?: throw IllegalArgumentException("Form1 ID tidak valid")
+                        val reportId = call.parameters["reportId"]?.toIntOrNull()
+                            ?: throw IllegalArgumentException("Report ID tidak valid")
+                        val form = formSatuService.getById(Pair(form1id, reportId))
+                        if (form != null) {
+                            val report = reportService.getById(reportId)
+                                ?: throw NotFoundException("Report dengan ID $reportId tidak ditemukan")
+                            call.respond(
+                                HttpStatusCode.OK,
+                                successResponse(form, "Berhasil mengambil FormSatu")
+                            )
+                        } else {
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                successResponse(
                                     null,
-                                    message = "Ciri fisik dan cerita singkat tidak boleh kosong"
+                                    "FormSatu dengan ID $form1id dan Report ID $reportId tidak ditemukan"
                                 )
                             )
-                            return@post
                         }
-                        val savedForm = formSatuService.create(request)
-                        call.respond(
-                            HttpStatusCode.Created, successResponse(
-                                savedForm,
-                                message = "Form1 berhasil dibuat"
+                    }
+
+                    patch("{id}") {
+                        val authHeader = call.request.headers["Authorization"]
+                            ?: return@patch call.respond(HttpStatusCode.Unauthorized, "Missing Authorization header")
+
+                        val idToken = authHeader.removePrefix("Bearer ").trim()
+
+                        val decodedToken = try {
+                            FirebaseAuth.getInstance().verifyIdToken(idToken)
+                        } catch (e: Exception) {
+                            return@patch call.respond(
+                                HttpStatusCode.Unauthorized,
+                                "Invalid or expired ID token: ${e.message}"
                             )
-                        )
-                    }
-                }
-
-                patch("{id}") {
-                    val authHeader = call.request.headers["Authorization"]
-                        ?: return@patch call.respond(HttpStatusCode.Unauthorized, "Missing Authorization header")
-
-                    val idToken = authHeader.removePrefix("Bearer ").trim()
-
-                    val decodedToken = try {
-                        FirebaseAuth.getInstance().verifyIdToken(idToken)
-                    } catch (e: Exception) {
-                        return@patch call.respond(
-                            HttpStatusCode.Unauthorized,
-                            "Invalid or expired ID token: ${e.message}"
-                        )
-                    }
-                    val userId = decodedToken.uid
-
-                    val id = call.parameters["id"]?.toIntOrNull()
-                        ?: return@patch call.respond(HttpStatusCode.BadRequest, "ID tidak valid")
-
-                    val request = call.receive<TokenRequest<StatusLaporanRequest>>()
-                    val statusRequest = request.data!!
-                    val response = reportService.updateStatusLaporan(id, statusRequest)
-                    call.respond(HttpStatusCode.OK, successResponse(response, "Status laporan berhasil diupdate"))
-                    try {
-                        withContext(Dispatchers.IO) {
-                            notificationService.notifyUserStatusUpdated(userId, request.fcmToken, statusRequest.statusLaporan)
                         }
-                    } catch (e: Exception) {
-                        call.application.log.error("Failed to send notification: ${e.message}")
+                        val userId = decodedToken.uid
+
+                        val id = call.parameters["id"]?.toIntOrNull()
+                            ?: return@patch call.respond(HttpStatusCode.BadRequest, "ID tidak valid")
+
+                        val request = call.receive<TokenRequest<StatusLaporanRequest>>()
+                        val statusRequest = request.data!!
+                        val response = reportService.updateStatusLaporan(id, statusRequest)
+                        call.respond(HttpStatusCode.OK, successResponse(response, "Status laporan berhasil diupdate"))
+                        try {
+                            withContext(Dispatchers.IO) {
+                                notificationService.notifyUserStatusUpdated(
+                                    userId,
+                                    request.fcmToken,
+                                    statusRequest.statusLaporan
+                                )
+                            }
+                        } catch (e: Exception) {
+                            call.application.log.error("Failed to send notification: ${e.message}")
+                        }
+                    }
+
+                }
+
+                // report bukti
+                route("/evidences") {
+                    post("/{reportId}") {
+                        val reportId = call.parameters["reportId"]?.toIntOrNull()
+                            ?: throw IllegalArgumentException("Report ID tidak valid")
+                        val evidenceRequest = call.receive<EvidenceRequest>()
+                        val response = evidenceService.create(evidenceRequest.copy(reportId = reportId))
+                        call.respond(HttpStatusCode.Created, successResponse(response, "Bukti berhasil ditambahkan"))
+                    }
+
+                    put("/{reportId}/{buktiKe}") {
+                        val reportId = call.parameters["reportId"]?.toIntOrNull()
+                            ?: throw IllegalArgumentException("Report ID tidak valid")
+                        val buktiKe = call.parameters["buktiKe"]?.toIntOrNull()
+                            ?: throw IllegalArgumentException("BuktiKe tidak valid")
+                        val evidenceRequest = call.receive<EvidenceRequest>()
+                        val response = evidenceService.update(Pair(reportId, buktiKe), evidenceRequest)
+                        call.respond(
+                            HttpStatusCode.OK,
+                            successResponse(response, "Bukti ke-$buktiKe berhasil diperbarui")
+                        )
+                    }
+
+                    delete("/{reportId}/{buktiKe}") {
+                        val reportId = call.parameters["reportId"]?.toIntOrNull()
+                            ?: throw IllegalArgumentException("Report ID tidak valid")
+                        val buktiKe = call.parameters["buktiKe"]?.toIntOrNull()
+                            ?: throw IllegalArgumentException("BuktiKe tidak valid")
+                        evidenceService.delete(Pair(reportId, buktiKe))
+                        call.respond(
+                            HttpStatusCode.OK,
+                            successResponse(null, "Bukti ke-$buktiKe untuk laporan ID $reportId berhasil dihapus")
+                        )
                     }
                 }
-
             }
-
-            // report bukti
-            route("/evidences") {
-                post("/{reportId}") {
-                    val reportId = call.parameters["reportId"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("Report ID tidak valid")
-
-                    val evidenceRequest = call.receive<EvidenceRequest>()
-                    val response = evidenceService.create(evidenceRequest.copy(reportId = reportId))
-                    call.respond(HttpStatusCode.Created, successResponse(response, "Bukti berhasil ditambahkan"))
-                }
-
-                put("/{reportId}/{buktiKe}") {
-                    val reportId = call.parameters["reportId"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("Report ID tidak valid")
-                    val buktiKe = call.parameters["buktiKe"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("BuktiKe tidak valid")
-
-                    val evidenceRequest = call.receive<EvidenceRequest>()
-                    val response = evidenceService.update(Pair(reportId, buktiKe), evidenceRequest)
-                    call.respond(HttpStatusCode.OK, successResponse(response, "Bukti ke-$buktiKe berhasil diperbarui"))
-                }
-
-                delete("/{reportId}/{buktiKe}") {
-                    val reportId = call.parameters["reportId"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("Report ID tidak valid")
-                    val buktiKe = call.parameters["buktiKe"]?.toIntOrNull()
-                        ?: throw IllegalArgumentException("BuktiKe tidak valid")
-
-                    evidenceService.delete(Pair(reportId, buktiKe))
-                    call.respond(
-                        HttpStatusCode.OK,
-                        successResponse(null, "Bukti ke-$buktiKe untuk laporan ID $reportId berhasil dihapus")
-                    )
-                }
-            }
+            staticResources("/static", "static")
+            staticFiles("/uploads", File("uploads"))
         }
-        staticResources("/static", "static")
-        staticFiles("/uploads", File("uploads"))
+        productRoute()
     }
-    productRoute()
 }

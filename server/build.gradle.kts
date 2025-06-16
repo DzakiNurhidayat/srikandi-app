@@ -35,13 +35,16 @@ dependencies {
     implementation(libs.koin.logger.slf4j)
     implementation(libs.ktor.server.config.yaml)
 
-    implementation(libs.exposed.core)
-    implementation(libs.exposed.dao)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.exposed.java.time)
-    implementation(libs.hikaricp)
-    implementation(libs.postgresql)
-    implementation(libs.h2)
+    // Exposed dependencies
+    implementation(libs.exposed.core) // Core API untuk DSL SQL
+    implementation(libs.exposed.jdbc) // Integrasi JDBC
+    implementation(libs.exposed.java.time) // Dukungan untuk tipe waktu Java
+    implementation(libs.exposed.dao) // Dukungan untuk DAO (Data Access Object)
+
+    // Database connection pools and drivers
+    implementation(libs.hikaricp) // HikariCP untuk pooling koneksi
+    implementation(libs.postgresql) // Driver PostgreSQL
+    implementation(libs.h2) // Database H2 untuk pengujian
 
     implementation(libs.kotlinx.datetime)
 

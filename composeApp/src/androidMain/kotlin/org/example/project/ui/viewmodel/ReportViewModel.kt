@@ -2,8 +2,10 @@ package org.example.project.ui.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.provider.OpenableColumns
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -109,7 +111,7 @@ class ReportViewModel @Inject constructor(
 
     suspend fun updateReport(id: Int, status: StatusLaporan) {
         val statusLaporanRequest = StatusLaporanRequest(status)
-        repository.updateReport(id, statusLaporanRequest, )
+        repository.updateReportStatus(id, statusLaporanRequest, )
         _updateReportState.value = Resource.Success(Unit)
 
     }
@@ -139,6 +141,54 @@ class ReportViewModel @Inject constructor(
         } catch (e: Exception) {
             Log.e("ReportViewModel", "Error updating report: ${e.message}")
             Result.failure(e)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun updateKlarifikasiDateForReport(
+        reportId: Int,
+        newKlarifikasiDate: String,
+        currentReport: Report
+    ) {
+        viewModelScope.launch {
+            _updateReportState.value = Resource.Loading
+            try {
+                // Buat ReportRequest baru dengan tanggal klarifikasi yang diperbarui
+                // dan data lainnya diambil dari currentReport
+                val updatedRequest = ReportRequest(
+                    isKorban = currentReport.isKorban,
+                    deskripsi = currentReport.deskripsi,
+                    jenisKekerasan = currentReport.jenisKekerasan,
+                    tempatKejadian = currentReport.tempatKejadian,
+                    tanggalKejadian = currentReport.tanggalKejadian.toString(),
+                    statusLaporan = currentReport.statusLaporan, // Status tetap sama
+                    bukti = currentReport.bukti,
+                    tanggalPemanggilan = newKlarifikasiDate // Field baru yang diupdate
+                )
+
+                // Panggil fungsi editReport yang sudah ada di repository Anda
+                val response = repository.editReport(reportId, updatedRequest)
+
+                if (response.status) {
+                    _updateReportState.value = Resource.Success(response.data!!)
+                    Log.d("ReportViewModel", "Tanggal klarifikasi berhasil diupdate untuk $reportId")
+
+                    // Perbarui _reports StateFlow secara lokal agar UI otomatis terupdate
+                    _reports.value = _reports.value.map {
+                        if (it.id == reportId) {
+                            response.data ?: it // Ganti dengan data terbaru dari respons API
+                        } else {
+                            it
+                        }
+                    }
+                } else {
+                    _updateReportState.value = Resource.Error(response.message ?: "Gagal memperbarui tanggal klarifikasi")
+                    Log.e("ReportViewModel", "Error updating klarifikasi date for $reportId: ${response.message}")
+                }
+            } catch (e: Exception) {
+                _updateReportState.value = Resource.Error(e.message ?: "Terjadi kesalahan tidak dikenal saat memperbarui tanggal klarifikasi")
+                Log.e("ReportViewModel", "Exception updating klarifikasi date for $reportId: ${e.message}")
+            }
         }
     }
 }
